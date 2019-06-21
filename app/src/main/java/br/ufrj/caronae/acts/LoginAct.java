@@ -3,167 +3,175 @@ package br.ufrj.caronae.acts;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.rey.material.widget.Button;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
-import br.ufrj.caronae.App;
+import br.ufrj.caronae.Constants;
 import br.ufrj.caronae.R;
-import br.ufrj.caronae.SharedPref;
 import br.ufrj.caronae.Util;
-import br.ufrj.caronae.models.Ride;
-import br.ufrj.caronae.models.modelsforjson.LoginForJson;
-import br.ufrj.caronae.models.modelsforjson.UserWithRidesForJson;
-import butterknife.Bind;
+import br.ufrj.caronae.httpapis.InvalidCredentialsException;
+import br.ufrj.caronae.httpapis.LoginService;
+import br.ufrj.caronae.httpapis.ServiceCallback;
+import br.ufrj.caronae.models.User;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class LoginAct extends AppCompatActivity {
-    @Bind(R.id.token_et)
+    @BindView(R.id.token_et)
     EditText token_et;
-    @Bind(R.id.idUfrj_et)
-    EditText idUfrj_et;
-    @Bind(R.id.send_bt)
+    @BindView(R.id.idUfrj_et)
+    EditText idUFRJ_et;
+    @BindView(R.id.login_manually)
+    TextView loginManually;
+    @BindView(R.id.send_bt)
     Button loginButton;
+    @BindView(R.id.background_left)
+    RelativeLayout backgroundLeft;
+    @BindView(R.id.background_right)
+    RelativeLayout backgroundRight;
+    @BindView(R.id.institution_login_button)
+    RelativeLayout institutionLoginButton;
+    @BindView(R.id.loading_login)
+    ProgressBar onLoading;
 
-    public boolean ASYNC_IS_RUNNING = false;
-
+    private boolean loginWithInstitutionEnabled = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
+        if (!Constants.BUILD_TYPE.equals("prod")) {
+            loginManually.setVisibility(View.VISIBLE);
+        }
 
         token_et.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 boolean handled = false;
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
-                    sendBt();
+                    startLegacyLogin();
                     handled = true;
                 }
                 return handled;
             }
         });
+
+        if (getIntent().getBooleanExtra("startLink", false)) {
+            institutionLoginButton.setClickable(false);
+            institutionLoginButton.setFocusable(false);
+            onLoading.setVisibility(View.VISIBLE);
+
+            String id = getIntent().getStringExtra("id");
+            String token = getIntent().getStringExtra("token");
+            startLogin(id, token);
+        }
     }
 
+    //DEV Login
     @OnClick(R.id.send_bt)
-    public void sendBt() {
+    public void startLegacyLogin() {
         loginButton.setEnabled(false);
-        final ProgressDialog pd = ProgressDialog.show(this, "", getString(R.string.wait), true, true);
-
+        final ProgressDialog pd = ProgressDialog.show(this, "", getString(R.string.wait), true, false);
         String tokenHolder = token_et.getText().toString();
-        final String idUfrj = idUfrj_et.getText().toString();
+        final String idUFRJ = idUFRJ_et.getText().toString();
         final String token = Util.fixBlankSpaces(tokenHolder).toUpperCase();
 
-            Call<UserWithRidesForJson> loginCall = App.getNetworkService(getApplicationContext()).login(new LoginForJson(token, idUfrj));
-            loginCall.enqueue(new Callback<UserWithRidesForJson>() {
-                @Override
-                public void onResponse(Call<UserWithRidesForJson> call, Response<UserWithRidesForJson> response) {
-                    // response.isSuccessful() is true if the response code is 2xx
-                    if (response.isSuccessful()) {
-                        UserWithRidesForJson userWithRides = response.body();
-
-                        if (userWithRides == null || userWithRides.getUser() == null) {
-                            Util.toast(R.string.act_login_invalidLogin);
-                            return;
-                        }
-
-                        SharedPref.saveUser(userWithRides.getUser());
-                        SharedPref.saveUserToken(token);
-                        SharedPref.saveUserIdUfrj(idUfrj);
-                        SharedPref.saveNotifPref("true");
-
-                        if (!ASYNC_IS_RUNNING) {
-                            ASYNC_IS_RUNNING = true;
-                            new SaveRidesAsync(userWithRides).execute();
-                        }
-                        startActivity(new Intent(LoginAct.this, MainAct.class));
-                        LoginAct.this.finish();
-                    } else {
-                        // Server Errors
-                        pd.dismiss();
-                        loginButton.setEnabled(true);
-                        int statusCode = response.code();
-                        ResponseBody errorBody = response.errorBody();
-                        if (statusCode == 401) {
-                            Util.toast(R.string.act_login_invalidLogin);
-                        } else try {
-                            if (errorBody.string().equals("timeout")) {
-                                Util.toast(R.string.no_conexion);
-                            } else {
-                                Util.toast(R.string.act_login_loginFail);
-                                try {
-                                    Log.e("Login", "Code: " + statusCode
-                                            + "\n Body: " + errorBody.string());
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<UserWithRidesForJson> call, Throwable t) {
-                    // handle execution failures like no internet connectivity
-                    Log.e("Login", "Failure: " + t.getMessage());
-                    Util.toast(R.string.act_login_loginFail);
-                    pd.dismiss();
-                    loginButton.setEnabled(true);
-                }
-            });
-    }
-
-    @OnClick(R.id.getToken_tv)
-    public void getTokenBt() {
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(App.getHost() + "login")));
-    }
-
-    //@OnClick(R.id.logo)
-    public void signUp() {
-        startActivity(new Intent(LoginAct.this, SignUpAct.class));
-    }
-
-    private class SaveRidesAsync extends AsyncTask<Void, Void, Void> {
-        private final UserWithRidesForJson userWithRides;
-
-        public SaveRidesAsync(UserWithRidesForJson userWithRides) {
-            this.userWithRides = userWithRides;
-        }
-
-        @Override
-        protected Void doInBackground(Void... arg0) {
-            for (Ride ride : userWithRides.getRides()) {
-                ride.setTime(Util.formatTime(ride.getTime()));
-                String format = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
-                int c = ride.getDate().compareTo(format);
-                if (c >= 0)
-                    if (Ride.findById(Ride.class, ride.getDbId()) == null) {
-                        new Ride(ride).save();
-                    }
+        LoginService.service().signInLegacy(idUFRJ, token, new ServiceCallback<User>() {
+            @Override
+            public void success(User user) {
+                pd.dismiss();
+                logIn(user);
             }
 
-            return null;
+            @Override
+            public void fail(Throwable t) {
+                Log.e("ERROR: ", t.getMessage());
+                pd.dismiss();
+                loginButton.setEnabled(true);
+
+                if (t instanceof InvalidCredentialsException) {
+                    Util.toast(R.string.loginactivity_invalid_login);
+                    return;
+                }
+
+                Util.toast(R.string.loginactivity_login_fail);
+            }
+        });
+    }
+
+    //PROD Login
+    private void startLogin(String id, String token) {
+        LoginService.service().signIn(id, token, new ServiceCallback<User>() {
+            @Override
+            public void success(User user) {
+                logIn(user);
+            }
+
+            @Override
+            public void fail(Throwable t) {
+                Log.e("Login", "Erro ao fazer login");
+                Util.toast(R.string.loginactivity_login_fail);
+
+                institutionLoginButton.setClickable(true);
+                institutionLoginButton.setFocusable(true);
+                onLoading.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    @OnClick(R.id.login_manually)
+    public void toggleLoginMode() {
+        if (loginWithInstitutionEnabled) {
+            backgroundLeft.setVisibility(View.GONE);
+            backgroundRight.setVisibility(View.GONE);
+            institutionLoginButton.setVisibility(View.GONE);
+            idUFRJ_et.setVisibility(View.VISIBLE);
+            token_et.setVisibility(View.VISIBLE);
+            loginButton.setVisibility(View.VISIBLE);
+
+            loginManually.setText(R.string.login_with_institution);
+            loginWithInstitutionEnabled = false;
+        } else {
+            backgroundLeft.setVisibility(View.VISIBLE);
+            backgroundRight.setVisibility(View.VISIBLE);
+            institutionLoginButton.setVisibility(View.VISIBLE);
+            idUFRJ_et.setVisibility(View.GONE);
+            token_et.setVisibility(View.GONE);
+            loginButton.setVisibility(View.GONE);
+
+            loginManually.setText(R.string.login_manually);
+            loginWithInstitutionEnabled = true;
         }
+    }
+
+    @OnClick(R.id.institution_login_button)
+    public void openExternalLogin() {
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(Constants.API_BASE_URL + "login?type=app_jwt")));
+    }
+
+    private void logIn(User user) {
+        Class nextActivity;
+        if (user.hasIncompleteProfile()) {
+            nextActivity = WelcomeAct.class;
+        } else {
+            nextActivity = MainAct.class;
+        }
+
+        startActivity(new Intent(this, nextActivity));
+        LoginAct.this.finish();
     }
 }

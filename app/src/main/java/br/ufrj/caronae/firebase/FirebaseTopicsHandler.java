@@ -8,9 +8,6 @@ import java.util.List;
 
 import br.ufrj.caronae.models.ActiveRideId;
 
-/**
- * Created by Luis-DELL on 10/28/2016.
- */
 public class FirebaseTopicsHandler {
 
     public static void subscribeFirebaseTopic(String rideId) {
@@ -41,7 +38,6 @@ public class FirebaseTopicsHandler {
             if (activeRideId == null || activeRideId.isEmpty()) {
                     Log.i("CheckSubGcmTopic", "i'll subscribe to ride " + dbId);
 
-//                   GcmPubSub.getInstance(App.inst()).subscribe(SharedPref.getUserGcmToken(), "/topics/" + dbId, null);
                     subscribeFirebaseTopic(dbId);
                     new ActiveRideId(dbId).save();
 

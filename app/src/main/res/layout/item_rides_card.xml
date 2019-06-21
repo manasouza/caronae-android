@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:layout_margin="@dimen/card_list_margin">
+
+    <RelativeLayout
+        android:id="@+id/mainlayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/primary_lay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/photo_iv"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:src="@drawable/user_pic"
+                card_view:civ_border_color="@color/dark_gray"
+                android:layout_centerVertical="true"
+                card_view:civ_border_width="3dp"/>
+            <RelativeLayout
+                android:id="@+id/lay1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/photo_iv"
+                android:layout_toEndOf="@id/photo_iv"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_centerVertical="true">
+                <TextView
+                    android:id="@+id/location_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="50dp"
+                    android:layout_marginRight="50dp"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:text="BARRA DA TIJUCA ➜ PRAIA VERMELHA"/>
+
+                <TextView
+                    android:id="@+id/time_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignLeft="@+id/location_tv"
+                    android:layout_alignStart="@+id/location_tv"
+                    android:layout_marginEnd="50dp"
+                    android:layout_marginRight="50dp"
+                    android:layout_below="@+id/location_tv"
+                    android:textSize="13sp"
+                    android:text="Chegando às 00:00 | Dom | 25/12" />
+
+
+                <TextView
+                    android:id="@+id/name_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignLeft="@+id/location_tv"
+                    android:layout_alignStart="@+id/location_tv"
+                    android:layout_marginEnd="50dp"
+                    android:layout_marginRight="50dp"
+                    android:layout_below="@+id/time_tv"
+                    android:textSize="13sp"
+                    android:text="Paula Silva" />
+
+
+            </RelativeLayout>
+
+            <ImageView
+                android:id="@+id/arrow_right_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:textSize="24sp"
+                android:tint="@color/dark_gray"
+                android:src="@drawable/ic_keyboard_arrow_right_black_24dp"/>
+
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/secondary_lay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginTop="20dp"
+            android:layout_below="@id/primary_lay">
+            <TextView
+                android:id="@+id/lastText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="@string/fragment_ridesearch_warning"
+                android:drawableRight="@drawable/ic_search_24dp"
+                android:drawableEnd="@drawable/ic_search_24dp"
+                android:drawablePadding="5dp"/>
+            <ProgressBar
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_below="@+id/lastText"
+                android:layout_centerHorizontal="true"/>
+        </RelativeLayout>
+    </RelativeLayout>
+</LinearLayout>

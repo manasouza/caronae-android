@@ -5,6 +5,8 @@ import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 
+import static android.text.TextUtils.isEmpty;
+
 public class User implements Parcelable {
 
     @SerializedName("name")
@@ -37,30 +39,19 @@ public class User implements Parcelable {
     private String faceId;
 
     public User() {
+        // Required empty public constructor
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getProfile() {
         return profile;
     }
 
-    public void setProfile(String profile) {
-        this.profile = profile;
-    }
-
     public String getCourse() {
         return course;
-    }
-
-    public void setCourse(String course) {
-        this.course = course;
     }
 
     public String getPhoneNumber() {
@@ -115,16 +106,8 @@ public class User implements Parcelable {
         return dbId;
     }
 
-    public void setDbId(int dbId) {
-        this.dbId = dbId;
-    }
-
     public String getCreatedAt() {
         return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
     }
 
     public String getLocation() {
@@ -154,6 +137,8 @@ public class User implements Parcelable {
     public boolean sameFieldsState(User user) {
         if (isCarOwner() != user.isCarOwner()) return false;
         if (!getName().equals(user.getName())) return false;
+        if (getProfilePicUrl() != null ? !getProfilePicUrl().equals(user.getProfilePicUrl()) : user.getProfilePicUrl() != null)
+            return false;
         if (getProfile() != null ? !getProfile().equals(user.getProfile()) : user.getProfile() != null)
             return false;
         if (getCourse() != null ? !getCourse().equals(user.getCourse()) : user.getCourse() != null)
@@ -173,9 +158,6 @@ public class User implements Parcelable {
     }
 
     public void setUser(User editedUser) {
-        setName(editedUser.getName());
-        setProfile(editedUser.getProfile());
-        setCourse(editedUser.getCourse());
         setPhoneNumber(editedUser.getPhoneNumber());
         setEmail(editedUser.getEmail());
         setLocation(editedUser.getLocation());
@@ -242,4 +224,8 @@ public class User implements Parcelable {
             return new User[size];
         }
     };
+
+    public boolean hasIncompleteProfile() {
+        return isEmpty(email) || isEmpty(phoneNumber) || isEmpty(location);
+    }
 }

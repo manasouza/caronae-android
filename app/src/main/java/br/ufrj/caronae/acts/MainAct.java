@@ -1,63 +1,67 @@
 package br.ufrj.caronae.acts;
 
-import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Configuration;
-import android.os.Bundle;
+import android.graphics.Typeface;
 import android.preference.PreferenceManager;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.facebook.CallbackManager;
 import com.facebook.FacebookSdk;
-import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import br.ufrj.caronae.App;
+import br.ufrj.caronae.data.ImageSaver;
 import br.ufrj.caronae.R;
-import br.ufrj.caronae.RoundedTransformation;
-import br.ufrj.caronae.SharedPref;
+import br.ufrj.caronae.customizedviews.RoundedTransformation;
+import br.ufrj.caronae.data.SharedPref;
 import br.ufrj.caronae.Util;
 import br.ufrj.caronae.firebase.FirebaseTopicsHandler;
-import br.ufrj.caronae.frags.AboutFrag;
 import br.ufrj.caronae.frags.AllRidesFrag;
-import br.ufrj.caronae.frags.FAQFrag;
-import br.ufrj.caronae.frags.FalaeFrag;
-import br.ufrj.caronae.frags.MyProfileFrag;
 import br.ufrj.caronae.frags.MyRidesFrag;
+import br.ufrj.caronae.frags.OptionsMenuFrag;
 import br.ufrj.caronae.frags.RideFilterFrag;
+import br.ufrj.caronae.frags.RideOfferFrag;
 import br.ufrj.caronae.frags.RideSearchFrag;
 import br.ufrj.caronae.frags.RidesHistoryFrag;
-import br.ufrj.caronae.frags.TabbedRideOfferFrag;
-import br.ufrj.caronae.frags.TermsOfUseFrag;
+import br.ufrj.caronae.httpapis.CaronaeAPI;
 import br.ufrj.caronae.models.User;
-import br.ufrj.caronae.models.modelsforjson.RideFiltersForJson;
+import br.ufrj.caronae.models.modelsforjson.MyRidesForJson;
+import br.ufrj.caronae.models.modelsforjson.RideForJson;
+import retrofit2.Call;
+import retrofit2.Response;
 
 import static br.ufrj.caronae.acts.StartAct.MSG_TYPE_ALERT;
 import static br.ufrj.caronae.acts.StartAct.MSG_TYPE_ALERT_HEADER;
@@ -66,30 +70,132 @@ public class MainAct extends AppCompatActivity {
 
     private static final int GPLAY_UNAVAILABLE = 123;
 
-    private DrawerLayout mDrawer;
-    private ActionBarDrawerToggle drawerToggle;
     private CallbackManager callbackManager;
-    private TextView versionText;
+    private AllRidesFrag allRidesFrag;
 
-    static ImageButton dissmissFilter;
-    static CardView filterCard;
-    static TextView filterText;
+    ImageButton dissmissFilter;
+    CardView filterCard;
+    public RelativeLayout secondary;
+    public TextView filterText;
+    public BottomNavigationView navigation;
+    TextView cancel_bt;
+    public ImageView logo;
+    public TextView title;
+    boolean backToMain;
 
     private ArrayList<Class> backstack;
+
+    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
+            = new BottomNavigationView.OnNavigationItemSelectedListener() {
+
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.navigation_allrides:
+                    if(!SharedPref.NAV_INDICATOR.equals("AllRides")) {
+                        selectDrawerItem(item, false);
+                        SharedPref.NAV_INDICATOR = "AllRides";
+                    }
+                    return true;
+                case R.id.navigation_myrides:
+                    if(!SharedPref.NAV_INDICATOR.equals("MyRides")) {
+                        selectDrawerItem(item, false);
+                        SharedPref.NAV_INDICATOR = "MyRides";
+                    }
+                    return true;
+                case R.id.navigation_menu:
+                    if(!SharedPref.NAV_INDICATOR.equals("Menu")) {
+                        selectDrawerItem(item, false);
+                        SharedPref.NAV_INDICATOR = "Menu";
+                    }
+                    return true;
+            }
+            return false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
-
+        allRidesFrag = new AllRidesFrag();
+        dissmissFilter = (ImageButton) findViewById(R.id.dismiss_filter);
         filterCard = (CardView) findViewById(R.id.filter_card);
         filterText = (TextView) findViewById(R.id.filter_text);
-        dissmissFilter = (ImageButton) findViewById(R.id.dissmiss_filter);
-
         startFilterCard();
+        configureDismissFilterButton();
 
-        configureDissmissFilterButton();
+        Util.setColors();
+
+        if(App.isUserLoggedIn())
+        {
+            if (App.getUser().getProfilePicUrl() != null && !App.getUser().getProfilePicUrl().isEmpty())
+            {
+                saveProfilePhoto();
+            }
+        }
+        setTitle("");
+
+        if(!SharedPref.checkExistence(SharedPref.MYACTIVERIDESID_KEY) || !SharedPref.checkExistence(SharedPref.MYPENDINGRIDESID_KEY))
+        {
+            CaronaeAPI.service().getMyRides(Integer.toString(App.getUser().getDbId()))
+                .enqueue(new retrofit2.Callback<MyRidesForJson>() {
+                    @Override
+                    public void onResponse(Call<MyRidesForJson> call, Response<MyRidesForJson> response) {
+                        if (response.isSuccessful()) {
+                            MyRidesForJson data = response.body();
+                            List<RideForJson> activeRides = data.getActiveRides();
+                            List<RideForJson> offeredRides = data.getOfferedRides();
+                            List<RideForJson> pendingRides = data.getPendingRides();
+                            SharedPref.OPEN_MY_RIDES = true;
+                            SharedPref.MY_RIDES_ACTIVE = activeRides;
+                            SharedPref.MY_RIDES_OFFERED = offeredRides;
+                            SharedPref.MY_RIDES_PENDING = pendingRides;
+                            if(!activeRides.isEmpty()) {
+                                List<Integer> aRideId = new ArrayList<>();
+                                for(int i = 0; i < activeRides.size(); i++)
+                                {
+                                    aRideId.add(activeRides.get(i).getId().intValue());
+                                }
+                                SharedPref.setMyActiveRidesId(aRideId);
+                            }
+                            if(!pendingRides.isEmpty())
+                            {
+                                List<Integer> pRideId = new ArrayList<>();
+                                for(int i = 0; i < pendingRides.size(); i++)
+                                {
+                                    pRideId.add(pendingRides.get(i).getId().intValue());
+                                }
+                                SharedPref.setMyPendingRidesId(pRideId);
+                            }
+                        } else {
+                            Util.treatResponseFromServer(response);
+                            Util.debug(response.message());
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<MyRidesForJson> call, Throwable t) {
+                        Util.debug(t.getMessage());
+                    }
+                });
+        }
+
+        navigation = findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        cancel_bt = findViewById(R.id.cancel_bt);
+        secondary = findViewById(R.id.secondaryitems);
+        logo = findViewById(R.id.header_image);
+        title = findViewById(R.id.title);
+        navigation.getMenu().getItem(0).setChecked(false);
+        navigation.getMenu().getItem(1).setChecked(false);
+        navigation.getMenu().getItem(2).setChecked(false);
+        verifyItem();
+        cancel_bt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                verifyItem();
+            }
+        });
 
         SharedPref.setChatActIsForeground(false);
 
@@ -99,13 +205,9 @@ public class MainAct extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
         //Subscripe to topics
         FirebaseTopicsHandler.subscribeFirebaseTopic("user-" + App.getUser().getDbId());
         FirebaseTopicsHandler.subscribeFirebaseTopic(SharedPref.TOPIC_GERAL);
-
-        versionText = (TextView) findViewById(R.id.text_version);
-        versionText.setText("Caronae " + Util.getAppVersionName(this));
 
         String title = PreferenceManager.getDefaultSharedPreferences(this).getString(MSG_TYPE_ALERT_HEADER, "");
         String alert = PreferenceManager.getDefaultSharedPreferences(this).getString(MSG_TYPE_ALERT, "");
@@ -126,188 +228,107 @@ public class MainAct extends AppCompatActivity {
             PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString(StartAct.MSG_TYPE_ALERT_HEADER, "").commit();
         }
 
-        mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-
-        drawerToggle = new ActionBarDrawerToggle(this,
-                mDrawer,
-                toolbar,
-                R.string.drawer_open,
-                R.string.drawer_close) {
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                //update user pic on drawer if it changed
-                String profilePicUrl = SharedPref.getDrawerPic();
-                if (!profilePicUrl.equals(App.getUser().getProfilePicUrl())) {
-                    if (App.getUser().getProfilePicUrl() != null)
-                        profilePicUrl = App.getUser().getProfilePicUrl();
-                    else
-                        profilePicUrl = "";
-
-                    ImageView user_pic = (ImageView) drawerView.findViewById(R.id.user_pic);
-
-                    RelativeLayout drawerHeader = (RelativeLayout) drawerView.findViewById(R.id.drawer_header_layout);
-
-                    drawerHeader.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            showProfileFrag();
-                        }
-                    });
-
-                    if (!profilePicUrl.isEmpty()) {
-                        Picasso.with(MainAct.this).load(profilePicUrl)
-                                .placeholder(R.drawable.user_pic)
-                                .error(R.drawable.user_pic)
-                                .transform(new RoundedTransformation())
-                                .into(user_pic);
-                    } else {
-                        Picasso.with(MainAct.this).load(R.drawable.user_pic)
-                                .placeholder(R.drawable.user_pic)
-                                .error(R.drawable.user_pic)
-                                .into(user_pic);
-                    }
-
-                    SharedPref.saveDrawerPic(profilePicUrl);
-                }
-
-                //hide keyboard when nav drawer opens
-                InputMethodManager inputMethodManager = (InputMethodManager) MainAct.this.getSystemService(Activity.INPUT_METHOD_SERVICE);
-                try {
-                    //noinspection ConstantConditions
-                    inputMethodManager.hideSoftInputFromWindow(MainAct.this.getCurrentFocus().getWindowToken(), 0);
-                } catch (NullPointerException e) {
-                    Log.e("onDrawerOpened", e.getMessage());
-                }
-            }
-        };
-        mDrawer.setDrawerListener(drawerToggle);
-
-        final ActionBar ab = getSupportActionBar();
-        if (ab != null) {
-            ab.setDisplayHomeAsUpEnabled(true);
-        }
-
-        NavigationView nvDrawer = (NavigationView) findViewById(R.id.nvView);
-        setupDrawerContent(nvDrawer);
-        getHeaderView(nvDrawer);
-
         backstack = new ArrayList<>();
 
     }
 
-
-
     @Override
     protected void onStart() {
         super.onStart();
-
         User user = App.getUser();
         Fragment fragment;
-
-        boolean goToMyRides = getIntent().getBooleanExtra(SharedPref.MY_RIDE_LIST_KEY, false);
-        if (user.getEmail() == null || user.getEmail().isEmpty() ||
-                user.getPhoneNumber() == null || user.getPhoneNumber().isEmpty() ||
-                user.getLocation() == null || user.getLocation().isEmpty()) {
-            fragment = new MyProfileFrag();
-            Util.toast(getString(R.string.act_main_profileIncomplete));
-        } else if (goToMyRides){
-            fragment = new MyRidesFrag();
-            backstack.add(new AllRidesFrag().getClass());
+        navigation.getMenu().getItem(0).setChecked(false);
+        navigation.getMenu().getItem(1).setChecked(false);
+        navigation.getMenu().getItem(2).setChecked(false);
+        if(user == null)
+        {
+            Intent login = new Intent(this, LoginAct.class);
+            startActivity(login);
         }
-        else {
-            fragment = new AllRidesFrag();
+        else if (user.hasIncompleteProfile()) {
+            Intent firstLogin = new Intent(this, WelcomeAct.class);
+            startActivity(firstLogin);
         }
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
-        backstack.add(fragment.getClass());
+        else if(!backToMain) {
+            switch (SharedPref.NAV_INDICATOR)
+            {
+                case "MyRides":
+                    fragment = new MyRidesFrag();
+                    navigation.getMenu().getItem(1).setChecked(true);
+                    break;
+                case "Menu":
+                    fragment = new OptionsMenuFrag();
+                    navigation.getMenu().getItem(2).setChecked(true);
+                    break;
+                default:
+                    fragment = allRidesFrag;
+                    navigation.getMenu().getItem(0).setChecked(true);
+            }
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.flContent, fragment).commit();
+            backstack.add(fragment.getClass());
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (!SharedPref.FRAGMENT_INDICATOR.equals("")){
-            if (SharedPref.FRAGMENT_INDICATOR.equals(MyRidesFrag.class.getName()))
-                SharedPref.FRAGMENT_INDICATOR = "";
+        if(!backToMain)
+        {
+            if (!SharedPref.FRAGMENT_INDICATOR.equals("")) {
+                if (SharedPref.FRAGMENT_INDICATOR.equals(MyRidesFrag.class.getName()))
+                    SharedPref.FRAGMENT_INDICATOR = "";
                 showActiveRidesFrag();
+            }
         }
     }
 
-    private void getHeaderView(NavigationView nvDrawer) {
-        LayoutInflater inflater = LayoutInflater.from(this);
-        View nvHeader = inflater.inflate(R.layout.nav_header, null, false);
-
-        TextView name_tv = (TextView) nvHeader.findViewById(R.id.name_tv);
-        name_tv.setText(App.getUser().getName());
-        TextView course_tv = (TextView) nvHeader.findViewById(R.id.course_tv);
-        course_tv.setText(App.getUser().getCourse());
-        ImageView user_pic = (ImageView) nvHeader.findViewById(R.id.user_pic);
-        String profilePicUrl = App.getUser().getProfilePicUrl();
-        if (profilePicUrl != null && !profilePicUrl.isEmpty())
-            Picasso.with(this).load(profilePicUrl)
-                    .placeholder(R.drawable.user_pic)
-                    .error(R.drawable.user_pic)
-                    .transform(new RoundedTransformation())
-                    .into(user_pic);
-
-        nvDrawer.addHeaderView(nvHeader);
-    }
-
-    private void setupDrawerContent(NavigationView navigationView) {
-        navigationView.setNavigationItemSelectedListener(
-                new NavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
-                        selectDrawerItem(menuItem);
-                        return true;
-                    }
-                });
-    }
-
-    private void selectDrawerItem(MenuItem menuItem) {
+    private void selectDrawerItem(MenuItem menuItem, boolean slideVertical) {
+        Menu menu = navigation.getMenu();
         Fragment fragment = null;
+        int selectedIndex;
         Class fragmentClass;
+        menu.getItem(0).setChecked(false);
+        menu.getItem(1).setChecked(false);
+        menu.getItem(2).setChecked(false);
+        
         switch (menuItem.getItemId()) {
-            case R.id.nav_first_fragment:
-                fragmentClass = MyProfileFrag.class;
-                break;
-            case R.id.nav_second_fragment:
+            case R.id.navigation_allrides:
+                if(!filterText.getText().equals(""))
+                {
+                    showFilterCard(getBaseContext());
+                }
+                else
+                {
+                    hideFilterCard(getBaseContext());
+                }
                 fragmentClass = AllRidesFrag.class;
+                fragment = allRidesFrag;
+                selectedIndex = 0;
                 break;
-            case R.id.nav_third_fragment:
+            case R.id.navigation_myrides:
+                hideFilterCard(getBaseContext());
                 fragmentClass = MyRidesFrag.class;
-                break;
-            case R.id.nav_fifth_fragment:
-                fragmentClass = RidesHistoryFrag.class;
-                break;
-            case R.id.nav_sixth_fragment:
-                fragmentClass = FalaeFrag.class;
-                break;
-            case R.id.nav_seventh_fragment:
-                fragmentClass = TermsOfUseFrag.class;
-                break;
-            case R.id.nav_eigth_fragment:
-                fragmentClass = AboutFrag.class;
-                break;
-            case R.id.nav_ninth_fragment:
-                fragmentClass = FAQFrag.class;
-                break;
-            case R.id.nav_tenth_fragment:
-                fragmentClass = null;
-                //TODO: Transformar em um intent service, unsubscrive nao ta acontecendo imediatamente
-                //Unsubscribe from lists
-                App.LogOut();
+                selectedIndex = 1;
                 break;
             default:
-                fragmentClass = AllRidesFrag.class;
+                fragmentClass = OptionsMenuFrag.class;
+                hideFilterCard(getBaseContext());
+                selectedIndex = 2;
+                break;
         }
+
+        menu.getItem(selectedIndex).setChecked(true);
 
         if (fragmentClass == null)
             finish();
         else {
-            try {
-                fragment = (Fragment) fragmentClass.newInstance();
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (fragment == null) {
+                try {
+                    fragment = (Fragment) fragmentClass.newInstance();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             backstackSafeCheck();
@@ -315,18 +336,18 @@ public class MainAct extends AppCompatActivity {
             backstack.add(fragmentClass);
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.setCustomAnimations(R.anim.anim_right_slide_in, R.anim.anim_left_slide_out);
-            transaction.replace(R.id.flContent, fragment).commit();
-
-            setTitle(menuItem.getTitle());
-            mDrawer.closeDrawers();
+            if(slideVertical) {
+                transaction.setCustomAnimations(R.anim.anim_up_slide_in, R.anim.anim_down_slide_out);
+            }
+            transaction.replace(R.id.flContent, fragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
         }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-
         openFragFromNotif(intent);
     }
 
@@ -361,104 +382,156 @@ public class MainAct extends AppCompatActivity {
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.setCustomAnimations(R.anim.anim_right_slide_in, R.anim.anim_left_slide_out);
         transaction.replace(R.id.flContent, fragment).commit();
-        setTitle(retrieveTitle(fragmentClass.toString()));
     }
 
     @Override
     public void onBackPressed() {
-        backstackSafeCheck();
-        if (!backstack.isEmpty())
-            backstack.remove(backstack.size() - 1);
-        if (backstack.isEmpty()) {
-            finish();
-        } else {
-            Class fragmentClass = backstack.get(backstack.size() - 1);
-
+        if(secondary.getVisibility() == View.VISIBLE)
+        {
             Fragment fragment = null;
+            Class fragmentClass;
+            if (!backstack.isEmpty())
+                backstack.remove(backstack.size() - 1);
+            if(title.getText().equals("Filtrar carona"))
+            {
+                backstack.remove(AllRidesFrag.class);
+                backstack.add(AllRidesFrag.class);
+                fragmentClass = AllRidesFrag.class;
+            }
+            else if(title.getText().equals("Criar carona"))
+            {
+                backstack.remove(MyRidesFrag.class);
+                backstack.add(MyRidesFrag.class);
+                fragmentClass = MyRidesFrag.class;
+            }
+            else
+            {
+                backstack.remove(AllRidesFrag.class);
+                backstack.add(AllRidesFrag.class);
+                fragmentClass = AllRidesFrag.class;
+            }
             try {
                 fragment = (Fragment) fragmentClass.newInstance();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.setCustomAnimations(R.anim.anim_fade_in, R.anim.anim_fade_out);
+            fragmentManager.popBackStack();
+            transaction.setCustomAnimations(R.anim.anim_up_slide_in, R.anim.anim_down_slide_out);
             transaction.replace(R.id.flContent, fragment).commit();
-            setTitle(retrieveTitle(fragmentClass.toString()));
-            mDrawer.closeDrawers();
+        }
+        else {
+            backstackSafeCheck();
+            if (!backstack.isEmpty())
+                backstack.remove(backstack.size() - 1);
+            if (backstack.isEmpty()) {
+                finish();
+            } else {
+                Class fragmentClass = backstack.get(backstack.size() - 1);
+                Fragment fragment = null;
+                try {
+                    if (!filterText.getText().equals("") && fragmentClass.equals(AllRidesFrag.class)) {
+                        showFilterCard(getBaseContext());
+                    } else {
+                        hideFilterCard(getBaseContext());
+                    }
+                    fragment = (Fragment) fragmentClass.newInstance();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                BottomNavigationView bNavView = (BottomNavigationView) findViewById(R.id.navigation);
+                navigation.getMenu().getItem(0).setChecked(false);
+                navigation.getMenu().getItem(1).setChecked(false);
+                navigation.getMenu().getItem(2).setChecked(false);
+                if (fragmentClass.equals(AllRidesFrag.class)) {
+                    if (!bNavView.getMenu().getItem(0).isChecked()) {
+                        SharedPref.NAV_INDICATOR = "AllRides";
+                        bNavView.getMenu().getItem(0).setChecked(true);
+                    }
+                } else if (fragmentClass.equals(MyRidesFrag.class)) {
+                    if (!bNavView.getMenu().getItem(1).isChecked()) {
+                        SharedPref.NAV_INDICATOR = "MyRides";
+                        bNavView.getMenu().getItem(1).setChecked(true);
+                    }
+                } else if (fragmentClass.equals(OptionsMenuFrag.class)) {
+                    if (!bNavView.getMenu().getItem(2).isChecked()) {
+                        SharedPref.NAV_INDICATOR = "Menu";
+                        bNavView.getMenu().getItem(2).setChecked(true);
+                    }
+                }
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.setCustomAnimations(R.anim.anim_fade_in, R.anim.anim_fade_out);
+                transaction.replace(R.id.flContent, fragment).commit();
+            }
         }
     }
 
-    private void backstackSafeCheck() {//better safe than sorry
+    //Better safe than sorry
+    private void backstackSafeCheck() {
         if (backstack == null)
             backstack = new ArrayList<>();
     }
 
-    private int retrieveTitle(String fragmentClass) {
-        if (fragmentClass.equals(MyProfileFrag.class.toString()))
-            return R.string.frag_profile_title;
-        if (fragmentClass.equals(AllRidesFrag.class.toString()))
-            return R.string.frag_allrides_title;
-        if (fragmentClass.equals(MyRidesFrag.class.toString()))
-            return R.string.frag_myactiverides_title;
-        if (fragmentClass.equals(RidesHistoryFrag.class.toString()))
-            return R.string.frag_history_title;
-        if (fragmentClass.equals(FalaeFrag.class.toString()))
-            return R.string.frag_falae_title;
-        if (fragmentClass.equals(TabbedRideOfferFrag.class.toString()))
-            return R.string.act_main_setRideOfferFragTitle;
-        if (fragmentClass.equals(RideSearchFrag.class.toString()))
-            return R.string.frag_searchride_title;
-        if (fragmentClass.equals(AboutFrag.class.toString()))
-            return R.string.frag_about_title;
-        return R.string.app_name;
+    public void showMainItems()
+    {
+        if(navigation.getVisibility() == View.INVISIBLE) {
+            navigation.setVisibility(View.VISIBLE);
+            logo.setVisibility(View.VISIBLE);
+        }
+        if(secondary.getVisibility() == View.VISIBLE)
+        {
+            secondary.setVisibility(View.INVISIBLE);
+        }
     }
 
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        // Sync the toggle state after onRestoreInstanceState has occurred.
-        drawerToggle.syncState();
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // Pass any configuration change to the drawer toggles
-        drawerToggle.onConfigurationChanged(newConfig);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.toolbar_menu, menu);
-        return true;
-    }
-
+    //Controls the actions of the buttons of search and filter that are present in toolbar
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        navigation.setVisibility(View.INVISIBLE);
+        logo.setVisibility(View.INVISIBLE);
+        secondary.setVisibility(View.VISIBLE);
+        backstackSafeCheck();
+        hideFilterCard(getBaseContext());
+        Class fragmentClass = null;
+        Fragment fragment = null;
+        backToMain = true;
         if (item.getItemId() == R.id.search_frag_bt) {
-            backstackSafeCheck();
+            title.setText("Buscar carona");
             backstack.remove(RideSearchFrag.class);
             backstack.add(RideSearchFrag.class);
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.setCustomAnimations(R.anim.anim_up_slide_in, R.anim.anim_down_slide_out);
-            transaction.replace(R.id.flContent, new RideSearchFrag()).commit();
-            setTitle(item.getTitle());
+            fragmentClass = RideSearchFrag.class;
         } else if (item.getItemId() == R.id.filter_frag_bt){
-            backstackSafeCheck();
+            title.setText("Filtrar carona");
             backstack.remove(RideFilterFrag.class);
             backstack.add(RideFilterFrag.class);
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.setCustomAnimations(R.anim.anim_up_slide_in, R.anim.anim_down_slide_out);
-            transaction.replace(R.id.flContent, new RideFilterFrag()).commit();
-            setTitle(item.getTitle());
+            fragmentClass = RideFilterFrag.class;
         }
+        else if(item.getItemId() == R.id.new_ride_bt) {
+            title.setText("Criar carona");
+            backstack.remove(RideOfferFrag.class);
+            backstack.add(RideOfferFrag.class);
+            fragmentClass = RideOfferFrag.class;
+        }
+        try {
+            fragment = (Fragment) fragmentClass.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        fragmentManager.popBackStack();
+        transaction.setCustomAnimations(R.anim.anim_down_slide_in, R.anim.anim_up_slide_out);
+        transaction.replace(R.id.flContent, fragment).commit();
+        return super.onOptionsItemSelected(item);
+    }
 
-        return drawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
+    public CallbackManager getFbCallbackManager() {
+        if (callbackManager == null)
+            callbackManager = CallbackManager.Factory.create();
+
+        return callbackManager;
     }
 
     @Override
@@ -470,7 +543,7 @@ public class MainAct extends AppCompatActivity {
             new AlertDialog.Builder(this)
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setMessage(R.string.gplay_unavailable)
-                    .setPositiveButton(getString(R.string.act_main_oknogplay), new DialogInterface.OnClickListener() {
+                    .setPositiveButton(getString(R.string.ok_uppercase), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int which) {
                             //
@@ -479,126 +552,164 @@ public class MainAct extends AppCompatActivity {
         }
     }
 
-    public CallbackManager getFbCallbackManager() {
-        if (callbackManager == null)
-            callbackManager = CallbackManager.Factory.create();
-
-        return callbackManager;
-    }
-
-    public void showRideOfferFrag() {
-        backstackSafeCheck();
-        backstack.remove(TabbedRideOfferFrag.class);
-        backstack.add(TabbedRideOfferFrag.class);
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.setCustomAnimations(R.anim.anim_right_slide_in, R.anim.anim_left_slide_out);
-        transaction.replace(R.id.flContent, new TabbedRideOfferFrag()).commit();
-        setTitle(getString(R.string.act_main_setRideOfferFragTitle));
-    }
-
     public void showActiveRidesFrag() {
         backstackSafeCheck();
+        SharedPref.NAV_INDICATOR = "MyRides";
         backstack.remove(MyRidesFrag.class);
         backstack.add(MyRidesFrag.class);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.setCustomAnimations(R.anim.anim_fade_in, R.anim.anim_fade_out);
         transaction.replace(R.id.flContent, new MyRidesFrag()).commit();
-        setTitle(getString(R.string.frag_myactiverides_title));
+        hideFilterCard(getBaseContext());
     }
 
-    public void showRidesOfferListFrag() {
-        backstackSafeCheck();
-        backstack.remove(AllRidesFrag.class);
-        backstack.add(AllRidesFrag.class);
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.setCustomAnimations(R.anim.anim_fade_in, R.anim.anim_fade_out);
-        transaction.replace(R.id.flContent, new AllRidesFrag()).commit();
-        setTitle(getString(R.string.frag_allrides_title));
-    }
-
-    private void showProfileFrag() {
-        backstackSafeCheck();
-        backstack.remove(MyProfileFrag.class);
-        backstack.add(MyProfileFrag.class);
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.setCustomAnimations(R.anim.anim_fade_in, R.anim.anim_fade_out);
-        transaction.replace(R.id.flContent, new MyProfileFrag()).commit();
-        setTitle(retrieveTitle(MyProfileFrag.class.toString()));
-        mDrawer.closeDrawers();
-    }
-
-    public void removeFromBackstack(Object o){
-        backstack.remove(o.getClass());
-    }
-
-    private void configureDissmissFilterButton(){
-        dissmissFilter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SharedPref.saveFilterPref(null);
-                hideFilterCard(getApplicationContext());
-            }
+    private void configureDismissFilterButton(){
+        dissmissFilter.setOnClickListener((View v) -> {
+            SharedPref.setFilterPref(false);
+            filterText.setText("");
+            hideFilterCard(getApplicationContext());
+            allRidesFrag.needsUpdating();
         });
     }
 
-
-    public static void updateFilterCard(Context context, String filtersJsonString){
-        if (!filtersJsonString.equals(SharedPref.MISSING_PREF)) {
-            RideFiltersForJson filters = loadFilters(filtersJsonString);
-            String resumeLocation = filters.getResumeLocation();
-            String center = filters.getCenter();
-            String zone = filters.getZone();
-            if (!resumeLocation.equals("")) {
-                if (center.equals("")) {
-                    center = "Todos os Centros";
-                }
-
-                filterText.setText(center + " - " + resumeLocation);
-            } else if (!zone.equals("")){
-                if (center.equals("")) {
-                    center = "Todos os Centros";
-                }
-
-                filterText.setText(center + " - " + zone);
-            }
-            showFilterCard(context);
+    public void updateFilterCard(Context context){
+        String resumeLocation = "", center = "", campus = "", zone = "";
+        if(Util.isZone(SharedPref.getLocationFilter()))
+        {
+            zone = SharedPref.getLocationFilter();
         }
+        else
+        {
+            if(!SharedPref.getLocationFilter().equals("Todos os Bairros")) {
+                resumeLocation = SharedPref.getLocationFilter();
+            }
+        }
+
+        if(Util.isCampus(SharedPref.getCenterFilter()))
+        {
+            campus = SharedPref.getCenterFilter();
+        }
+        else
+        {
+            if(!SharedPref.getCenterFilter().equals("Todos os Campi")) {
+                center = SharedPref.getCenterFilter();
+            }
+        }
+        String filtering = "Filtrando: ";
+        SpannableString cardText;
+
+        if (!resumeLocation.equals("")) {
+            if (center.equals("")) {
+                if (campus.equals("")) {
+                    center = "Todos os Campi";
+                } else {
+                    center = campus;
+                }
+                if(center.equals("Todos os Campi"))
+                {
+                    cardText = new SpannableString(filtering + resumeLocation);
+                }
+                else if(resumeLocation.equals("Todos os Bairros"))
+                {
+                    cardText = new SpannableString(filtering + center);
+                }
+                else {
+                    cardText = new SpannableString(filtering + center + ", " + resumeLocation);
+                }
+                cardText.setSpan(new StyleSpan(Typeface.BOLD), 0, filtering.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                filterText.setText(cardText);
+            }
+        } else if (!zone.equals("")){
+            if (center.equals("")) {
+                if (campus.equals("")) {
+                    center = "Todos os Campi";
+                } else {
+                    center = campus;
+                }
+                if(center.equals("Todos os Campi"))
+                {
+                    cardText = new SpannableString(filtering + zone);
+                }
+                else if(zone.equals("Todos os Bairros"))
+                {
+                    cardText = new SpannableString(filtering + center);
+                }
+                else {
+                    cardText = new SpannableString(filtering + center + ", " + zone);
+                }
+                cardText.setSpan(new StyleSpan(Typeface.BOLD), 0, filtering.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                filterText.setText(cardText);
+            }
+        }
+        showFilterCard(context);
     }
 
-    private static RideFiltersForJson loadFilters(String filters) {
-        return new Gson().fromJson(filters, RideFiltersForJson.class);
-    }
+    public void startFilterCard() {
+        if(SharedPref.getFiltersPref()) {
+            String resumeLocations = "", center = "", campus = "", zone = "";
 
-    private void startFilterCard() {
-        String filtersJsonString = SharedPref.getFiltersPref();
-        if (!filtersJsonString.equals(SharedPref.MISSING_PREF)) {
-            RideFiltersForJson filters = loadFilters(filtersJsonString);
-            String resumeLocations = filters.getResumeLocation();
-            String center = filters.getCenter();
-            String zone = filters.getZone();
+            if (Util.isZone(SharedPref.getLocationFilter())) {
+                zone = SharedPref.getLocationFilter();
+            } else {
+                if (!SharedPref.getLocationFilter().equals("Todos os Bairros")) {
+                    resumeLocations = SharedPref.getLocationFilter();
+                }
+            }
+            if (Util.isCampus(SharedPref.getCenterFilter())) {
+                campus = SharedPref.getCenterFilter();
+            } else {
+                if (!SharedPref.getCenterFilter().equals("Todos os Campi")) {
+                    center = SharedPref.getCenterFilter();
+                }
+            }
+            String filtering = "Filtrando: ";
+            SpannableString cardText;
+
             if (!resumeLocations.equals("")) {
                 if (center.equals("")) {
-                    center = "Todos os Centros";
+                    if (campus.equals("")) {
+                        center = "Todos os Campi";
+                    } else {
+                        center = campus;
+                    }
                 }
-
-                filterText.setText(center + " - " + resumeLocations);
+                if (center.equals("Todos os Campi")) {
+                    cardText = new SpannableString(filtering + resumeLocations);
+                } else if (zone.equals("Todos os Bairros")) {
+                    cardText = new SpannableString(filtering + center);
+                } else {
+                    cardText = new SpannableString(filtering + center + ", " + resumeLocations);
+                }
+                cardText.setSpan(new StyleSpan(Typeface.BOLD), 0, filtering.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                filterText.setText(cardText);
                 filterCard.setVisibility(View.VISIBLE);
-            } else if (!zone.equals("")){
-                if (center.equals("")) {
-                    center = "Todos os Centros";
+            } else {
+                if (zone.equals("")) {
+                    zone = "Todos os Bairros";
                 }
-
-                filterText.setText(center + " - " + zone);
+                if (center.equals("")) {
+                    if (campus.equals("")) {
+                        center = "Todos os Campi";
+                    } else {
+                        center = campus;
+                    }
+                }
+                if (center.equals("Todos os Campi")) {
+                    cardText = new SpannableString(filtering + zone);
+                } else if (zone.equals("Todos os Bairros")) {
+                    cardText = new SpannableString(filtering + center);
+                } else {
+                    cardText = new SpannableString(filtering + center + ", " + zone);
+                }
+                cardText.setSpan(new StyleSpan(Typeface.BOLD), 0, filtering.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                filterText.setText(cardText);
                 filterCard.setVisibility(View.VISIBLE);
             }
         }
     }
 
-    public static void showFilterCard(final Context context){
+    public void showFilterCard(final Context context){
         Animation animation = AnimationUtils.loadAnimation(context, R.anim.anim_fade_in);
         filterCard.startAnimation(animation);
         animation.setAnimationListener(new Animation.AnimationListener() {
@@ -621,23 +732,119 @@ public class MainAct extends AppCompatActivity {
     }
 
     public void hideFilterCard(final Context context){
-                Animation animation = AnimationUtils.loadAnimation(context, R.anim.anim_fade_out);
-                animation.setAnimationListener(new Animation.AnimationListener() {
-                    @Override
-                    public void onAnimationStart(Animation animation) {
+        Animation animation = AnimationUtils.loadAnimation(context, R.anim.anim_fade_out);
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
 
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animation animation) {
-                        filterCard.setVisibility(View.GONE);
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animation animation) {
-
-                    }
-                });
-                filterCard.startAnimation(animation);
             }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                filterCard.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        filterCard.startAnimation(animation);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if (v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                    v.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    private void saveProfilePhoto()
+    {
+        try
+        {
+            if (Util.isNetworkAvailable(getBaseContext()))
+            {
+                ImageView iv = new ImageView(getApplicationContext());
+                iv.setVisibility(View.INVISIBLE);
+                Picasso.with(getApplicationContext()).load(App.getUser().getProfilePicUrl())
+                        .placeholder(R.drawable.user_pic)
+                        .error(R.drawable.user_pic)
+                        .transform(new RoundedTransformation())
+                        .into(iv, new com.squareup.picasso.Callback() {
+                                    @Override
+                                    public void onSuccess() {
+                                        BitmapDrawable bmpDrawable = (BitmapDrawable)iv.getDrawable();
+                                        Bitmap bitmap = bmpDrawable.getBitmap();
+                                        new ImageSaver(getBaseContext()).
+                                                setFileName("myProfile.png").
+                                                setDirectoryName("images").
+                                                save(bitmap);
+                                        SharedPref.setSavedPic(true);
+                                    }
+
+                                    @Override
+                                    public void onError() {
+                                    }
+                                });
+            }
+        }
+        catch(Exception e){}
+    }
+
+    public void verifyItem()
+    {
+        switch(SharedPref.NAV_INDICATOR)
+        {
+            case "AllRides":
+                backToMain = false;
+                selectDrawerItem(navigation.getMenu().getItem(0), true);
+                navigation.getMenu().getItem(0).setChecked(true);
+                break;
+            case "MyRides":
+                backToMain = false;
+                selectDrawerItem(navigation.getMenu().getItem(1), true);
+                navigation.getMenu().getItem(1).setChecked(true);
+                break;
+            case "Menu":
+                backToMain = false;
+                selectDrawerItem(navigation.getMenu().getItem(2), true);
+                navigation.getMenu().getItem(2).setChecked(true);
+                break;
+            default:
+                backToMain = false;
+                selectDrawerItem(navigation.getMenu().getItem(0), true);
+                navigation.getMenu().getItem(0).setChecked(true);
+                break;
+        }
+    }
+
+    public void setCheckedItem()
+    {
+        switch(SharedPref.NAV_INDICATOR)
+        {
+            case "AllRides":
+                navigation.getMenu().getItem(0).setChecked(true);
+                break;
+            case "MyRides":
+                navigation.getMenu().getItem(1).setChecked(true);
+                break;
+            case "Menu":
+                navigation.getMenu().getItem(2).setChecked(true);
+                break;
+            default:
+                navigation.getMenu().getItem(0).setChecked(true);
+                break;
+        }
+    }
 }

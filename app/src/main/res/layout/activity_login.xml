@@ -1,10 +1,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_bg"
-    android:paddingTop="72dp"
+    android:background="@color/light_gray"
     tools:context="br.ufrj.caronae.acts.LoginAct">
 
     <RelativeLayout
@@ -21,61 +19,79 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
+            android:layout_marginTop="25dp"
             android:src="@drawable/logo" />
+
+        <ProgressBar
+            android:id="@+id/loading_login"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/logo"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"/>
 
         <TextView
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/logo"
-            android:paddingTop="30dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="60dp"
+            android:textSize="25sp"
+            android:textColor="@color/dark_gray"
             android:text="@string/hello"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/welcomeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/textView"
-            android:paddingTop="10dp"
-            android:text="@string/welcome"
+            android:layout_marginTop="25dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
+            android:gravity="center"
+            android:textColor="@color/dark_gray"
+            android:text="@string/welcome_message"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
-            android:id="@+id/getToken_tv"
+            android:id="@+id/key"
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/textView2"
+            android:layout_below="@id/welcomeText"
+            android:layout_marginTop="10dp"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="5dp"
             android:gravity="center"
-            android:text="@string/act_login_getTokenBtn"
-            android:textColor="@color/darkblue2"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <!-- Use "paddingLeft" instead of "gravity" atribute to avoid
-          the keyboard overlap the text when clicked 2 times.
-          Bug not fixed by google reffered in:
-          http://stackoverflow.com/questions/27247836/keyboard-over-edittext-on-second-click-->
+            android:textColor="@android:color/holo_blue_dark"
+            android:textStyle="bold"
+            android:text="@string/prod_caronae_key"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
+            android:visibility="gone"
             android:id="@+id/idUfrj_et"
             android:layout_width="285dp"
             android:layout_height="wrap_content"
-            android:layout_below="@id/getToken_tv"
+            android:layout_below="@id/key"
+            android:layout_marginTop="25dp"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:ems="8"
             android:gravity="center"
-            android:hint="@string/idUfrjHint_et"
+            android:hint="@string/id_hint"
             android:maxLines="1"
             android:paddingTop="10dp"
             android:singleLine="true" />
 
         <EditText
             android:id="@+id/token_et"
+            android:visibility="gone"
             android:layout_width="285dp"
             android:layout_height="wrap_content"
             android:layout_below="@id/idUfrj_et"
@@ -83,8 +99,8 @@
             android:layout_centerVertical="true"
             android:ems="8"
             android:gravity="center"
-            android:hint="@string/tokenHint_et"
-            android:imeActionLabel="@string/send_bt"
+            android:hint="@string/token_hint"
+            android:imeActionLabel="@string/send"
             android:imeOptions="actionSend"
             android:maxLines="1"
             android:paddingTop="10dp"
@@ -92,30 +108,75 @@
 
     </RelativeLayout>
 
+    <Button
+        android:id="@+id/send_bt"
+        android:layout_width="96dp"
+        android:layout_height="38dp"
+        android:layout_below="@id/login_lay1"
+        android:background="@drawable/btn_color"
+        android:layout_centerHorizontal="true"
+        android:text="@string/acess"
+        android:visibility="gone"/>
+
     <RelativeLayout
-        android:layout_width="match_parent"
+        android:id="@+id/background_left"
+        android:visibility="visible"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/login_lay1">
+        android:layout_below="@id/login_lay1"
+        android:layout_marginTop="60dp"
+        android:background="@drawable/back_left"/>
 
-        <FrameLayout
+    <RelativeLayout
+        android:id="@+id/background_right"
+        android:visibility="visible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/back_right"
+        android:layout_marginTop="60dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@id/login_lay1"/>
+
+    <RelativeLayout
+        android:id="@+id/institution_login_button"
+        android:visibility="visible"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginRight="60dp"
+        android:layout_marginEnd="60dp"
+        android:layout_marginStart="60dp"
+        android:layout_marginLeft="60dp"
+        android:layout_marginTop="50dp"
+        android:layout_below="@id/login_lay1"
+        android:background="@drawable/gradient">
+
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"></FrameLayout>
-
-        <FrameLayout
-            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_centerHorizontal="true"
-            android:background="@android:color/transparent">
+            android:layout_centerInParent="true">
 
-            <com.rey.material.widget.Button
-                android:id="@+id/send_bt"
-                style="@style/LightRaiseColorButtonRippleStyle"
+            <TextView
+                android:id="@+id/login_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/btn_color"
-                android:gravity="center"
-                android:text="@string/acess_bt"
-                app:rd_enable="true" />
-        </FrameLayout>
+                android:text="@string/login_with_institution"
+                android:drawableLeft="@drawable/ic_account_balance_24dp"
+                android:drawableStart="@drawable/ic_account_balance_24dp"
+                android:drawablePadding="10dp"
+                android:textSize="16sp"
+                android:layout_centerInParent="true"
+                android:textColor="@color/white"/>
+        </RelativeLayout>
     </RelativeLayout>
+
+    <TextView
+        android:id="@+id/login_manually"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="25dp"
+        android:text="@string/login_manually"
+        android:visibility="gone"/>
 </RelativeLayout>

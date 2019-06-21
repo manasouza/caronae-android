@@ -11,21 +11,15 @@ import br.ufrj.caronae.models.User;
 public class RideForJson extends Ride implements Parcelable {
     private User driver;
     private List<User> riders;
+    public String fromWhere, type;
+    public boolean showWarningText = false;
 
     public User getDriver() {
         return driver;
     }
 
-    public void setDriver(User driver) {
-        this.driver = driver;
-    }
-
     public List<User> getRiders() {
         return riders;
-    }
-
-    public void setRiders(List<User> riders) {
-        this.riders = riders;
     }
 
     public RideForJson(Parcel in) {
@@ -45,12 +39,12 @@ public class RideForJson extends Ride implements Parcelable {
         repeatsUntil = data[10];
         routineId = data[11];
 
-        int[] intData = new int[4];
+        int[] intData = new int[3];
         in.readIntArray(intData);
         going = intData[0] == 1;
         routine = intData[1] == 1;
         dbId = intData[2];
-        availableSlots = intData[3];
+
 
         driver = in.readParcelable(User.class.getClassLoader());
         //noinspection unchecked
@@ -79,8 +73,7 @@ public class RideForJson extends Ride implements Parcelable {
         parcel.writeIntArray(new int[]{
                 going ? 1 : 0,
                 routine ? 1 : 0,
-                dbId,
-                availableSlots
+                dbId
         });
         parcel.writeParcelable(driver, 0);
         parcel.writeList(riders);

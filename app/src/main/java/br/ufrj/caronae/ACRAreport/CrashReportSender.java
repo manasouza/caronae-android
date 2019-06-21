@@ -9,15 +9,12 @@ import org.acra.sender.ReportSender;
 import org.acra.sender.ReportSenderException;
 
 import br.ufrj.caronae.App;
+import br.ufrj.caronae.httpapis.CaronaeAPI;
 import br.ufrj.caronae.models.modelsforjson.FalaeMsgForJson;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-/**
- * Created by Luis-DELL on 3/18/2017.
- */
 
 public class CrashReportSender implements ReportSender {
 
@@ -50,7 +47,7 @@ public class CrashReportSender implements ReportSender {
 
         String subject = "ANDROID CRASH REPORT";
 
-        App.getNetworkService(context).falaeSendMessage(new FalaeMsgForJson(subject, message))
+        CaronaeAPI.service().falaeSendMessage(new FalaeMsgForJson(subject, message))
                 .enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {

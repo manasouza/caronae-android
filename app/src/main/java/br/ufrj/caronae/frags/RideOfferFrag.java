@@ -1,17 +1,24 @@
 package br.ufrj.caronae.frags;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
@@ -19,356 +26,295 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
-import com.rey.material.app.DatePickerDialog;
-import com.rey.material.app.Dialog;
-import com.rey.material.app.DialogFragment;
-import com.rey.material.app.SimpleDialog;
-import com.rey.material.app.TimePickerDialog;
-import com.rey.material.widget.Spinner;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import br.ufrj.caronae.App;
+import br.ufrj.caronae.customizedviews.CustomDateTimePicker;
+import br.ufrj.caronae.customizedviews.CustomDialogClass;
 import br.ufrj.caronae.R;
-import br.ufrj.caronae.SharedPref;
+import br.ufrj.caronae.data.SharedPref;
 import br.ufrj.caronae.Util;
 import br.ufrj.caronae.acts.MainAct;
-import br.ufrj.caronae.firebase.FirebaseTopicsHandler;
+import br.ufrj.caronae.acts.PlaceAct;
+import br.ufrj.caronae.httpapis.CaronaeAPI;
 import br.ufrj.caronae.models.ModelValidateDuplicate;
-import br.ufrj.caronae.models.Ride;
-import br.ufrj.caronae.models.RideRountine;
-import butterknife.Bind;
+import br.ufrj.caronae.models.RideOffer;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class RideOfferFrag extends Fragment {
 
-    @Bind(R.id.radioGroup2)
+    @BindView(R.id.tab1)
+    RelativeLayout isGoing_bt;
+    @BindView(R.id.tab2)
+    RelativeLayout isLeaving_bt;
+    @BindView(R.id.days_lo)
+    RelativeLayout days_lo;
+    @BindView(R.id.monday_cb)
+    RelativeLayout monday_cb;
+    @BindView(R.id.tuesday_cb)
+    RelativeLayout tuesday_cb;
+    @BindView(R.id.wednesday_cb)
+    RelativeLayout wednesday_cb;
+    @BindView(R.id.thursday_cb)
+    RelativeLayout thursday_cb;
+    @BindView(R.id.friday_cb)
+    RelativeLayout friday_cb;
+    @BindView(R.id.saturday_cb)
+    RelativeLayout saturday_cb;
+    @BindView(R.id.sunday_cb)
+    RelativeLayout sunday_cb;
+    @BindView(R.id.add_slot)
+    RelativeLayout addSlotButton;
+    @BindView(R.id.remove_slot)
+    RelativeLayout removeSlotButton;
+
+    @BindView(R.id.tab1_tv)
+    TextView isGoing_tv;
+    @BindView(R.id.tab2_tv)
+    TextView isLeaving_tv;
+    @BindView(R.id.mon_tv)
+    TextView mon_tv;
+    @BindView(R.id.tue_tv)
+    TextView tue_tv;
+    @BindView(R.id.wed_tv)
+    TextView wed_tv;
+    @BindView(R.id.thu_tv)
+    TextView thu_tv;
+    @BindView(R.id.fri_tv)
+    TextView fri_tv;
+    @BindView(R.id.sat_tv)
+    TextView sat_tv;
+    @BindView(R.id.sun_tv)
+    TextView sun_tv;
+    @BindView(R.id.time_et)
+    public TextView time_et;
+
+    @BindView(R.id.slots_n)
+    TextView slotNumber;
+    @BindView(R.id.remove_tv)
+    TextView remove_tv;
+    @BindView(R.id.add_tv)
+    TextView add_tv;
+
+    @BindView(R.id.radioGroup2)
     RadioGroup radioGroup2;
 
-    @Bind(R.id.neighborhood_et)
+    @BindView(R.id.neighborhood_et)
     EditText neighborhood_et;
-    @Bind(R.id.place_et)
+    @BindView(R.id.place_et)
     EditText place_et;
-    @Bind(R.id.way_et)
+    @BindView(R.id.way_et)
     EditText way_et;
-    @Bind(R.id.date_et)
-    TextView date_et;
-    @Bind(R.id.time_et)
-    TextView time_et;
-    @Bind(R.id.slots_et)
-    Spinner slots_et;
-    @Bind(R.id.center_et)
+    @BindView(R.id.center_et)
     EditText center_et;
-    @Bind(R.id.campi_et)
-    EditText campi_et;
-    @Bind(R.id.description_et)
+    @BindView(R.id.description_et)
     EditText description_et;
 
-    @Bind(R.id.routine_cb)
-    CheckBox routine_cb;
-    @Bind(R.id.days_lo)
-    RelativeLayout days_lo;
+    @BindView(R.id.routine_cb)
+    SwitchCompat routine_cb;
 
-    @Bind(R.id.monday_cb)
-    CheckBox monday_cb;
-    @Bind(R.id.tuesday_cb)
-    CheckBox tuesday_cb;
-    @Bind(R.id.wednesday_cb)
-    CheckBox wednesday_cb;
-    @Bind(R.id.thursday_cb)
-    CheckBox thursday_cb;
-    @Bind(R.id.friday_cb)
-    CheckBox friday_cb;
-    @Bind(R.id.saturday_cb)
-    CheckBox saturday_cb;
-    @Bind(R.id.sunday_cb)
-    CheckBox sunday_cb;
-    @Bind(R.id.scrollView)
+    @BindView(R.id.scrollView)
     ScrollView scrollView;
 
-    private String zone;
+    private int slots;
     private boolean going;
+    private boolean[] checked;
+    public String time;
     ProgressDialog pd;
+    public RideOffer ride;
 
     public RideOfferFrag() {
         // Required empty public constructor
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+    {
         View view = inflater.inflate(R.layout.fragment_ride_offer, container, false);
         ButterKnife.bind(this, view);
 
-        Bundle bundle = getArguments();
-        going = bundle.getBoolean("going");
+        checked = new boolean[7];
+        slots = 1;
+        going = true;
+        setButton(isLeaving_bt, isGoing_bt,isLeaving_tv, isGoing_tv);
 
-        center_et.setHint(going ? R.string.frag_rideSearch_hintPickCenter : R.string.frag_rideOffer_hintPickHub);
+        if(SharedPref.getGoingLabel() != null)
+        {
+            isGoing_tv.setText(SharedPref.getGoingLabel());
+        }
+        if(SharedPref.getLeavingLabel() != null)
+        {
+            isLeaving_tv.setText(SharedPref.getLeavingLabel());
+        }
+
+        setInitialDate();
 
         String[] items = new String[6];
-        for (int i = 0; i < items.length; i++)
+        for (int i = 0; i < items.length; i++) {
             items[i] = String.valueOf(i + 1);
+        }
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), R.layout.row_spn, items);
         adapter.setDropDownViewResource(R.layout.row_spn_dropdown);
-        slots_et.setAdapter(adapter);
 
         String lastRideOffer = going ? SharedPref.getLastRideGoingPref() : SharedPref.getLastRideNotGoingPref();
         if (!lastRideOffer.equals(SharedPref.MISSING_PREF)) {
             loadLastRide(lastRideOffer);
         }
-
-        checkCarOwnerDialog();
+        else
+        {
+            neighborhood_et.setText(R.string.neighborhood);
+            center_et.setText(going ? R.string.fragment_ridesearch_campi_hint : R.string.fragment_rideoffer_hub_hint);
+        }
+        if(going) {
+            checkCarOwnerDialog();
+        }
 
         return view;
     }
 
     private boolean checkCarOwnerDialog() {
+        Activity act = getActivity();
+        Fragment frag = this;
         if (!App.getUser().isCarOwner()) {
-            new AlertDialog.Builder(getActivity())
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setMessage(R.string.notCarOwner)
-                    .show();
+            CustomDialogClass cdc = new CustomDialogClass(act,"ROFINCO", frag);
+            cdc.show();
+            cdc.setTitleText("Você possui carro?");
+            cdc.setMessageText( "Parece que você marcou no seu perfil que não possui um carro. Para criar uma carona, preencha os dados do seu carro no seu perfil.");
+            cdc.setPButtonText("OK");
+            cdc.enableOnePositiveOption();
             return false;
         }
-
         return true;
     }
 
     private void loadLastRide(String lastRideOffer) {
-        Ride ride = new Gson().fromJson(lastRideOffer, Ride.class);
-        zone = ride.getZone();
+        ride = new Gson().fromJson(lastRideOffer, RideOffer.class);
         neighborhood_et.setText(ride.getNeighborhood());
         place_et.setText(ride.getPlace());
         way_et.setText(ride.getRoute());
-        date_et.setText(ride.getDate());
-        time_et.setText(ride.getTime());
-        slots_et.setSelection(Integer.parseInt(ride.getSlots()) - 1);
         center_et.setText(ride.getHub());
         description_et.setText(ride.getDescription());
-        boolean isRoutine = ride.isRoutine();
-        routine_cb.setChecked(isRoutine);
-        if (isRoutine) {
-            days_lo.setVisibility(routine_cb.isChecked() ? View.VISIBLE : View.GONE);
-            monday_cb.setChecked(ride.getWeekDays().contains("1"));
-            tuesday_cb.setChecked(ride.getWeekDays().contains("2"));
-            wednesday_cb.setChecked(ride.getWeekDays().contains("3"));
-            thursday_cb.setChecked(ride.getWeekDays().contains("4"));
-            friday_cb.setChecked(ride.getWeekDays().contains("5"));
-            saturday_cb.setChecked(ride.getWeekDays().contains("6"));
-            sunday_cb.setChecked(ride.getWeekDays().contains("7"));
+        routine_cb.setChecked(true);
+        for(int i = 0; i < 7; i++) {
+            setChecked(i);
         }
+    }
+
+    @Override
+    public void onStart()
+    {
+        try {
+            ((MainAct) getActivity()).setCheckedItem();
+        }
+        catch (Exception e)
+        {
+
+        }
+        if(!SharedPref.LOCATION_INFO.isEmpty() && !SharedPref.LOCATION_INFO.equals(""))
+        {
+            neighborhood_et.setText(SharedPref.LOCATION_INFO);
+            SharedPref.LOCATION_INFO = "";
+        }
+        if(!SharedPref.CAMPI_INFO.isEmpty() && !SharedPref.CAMPI_INFO.equals(""))
+        {
+            center_et.setText(SharedPref.CAMPI_INFO);
+            SharedPref.CAMPI_INFO = "";
+        }
+        super.onStart();
+    }
+
+    @Override
+    public void onResume()
+    {
+        try {
+            ((MainAct) getActivity()).setCheckedItem();
+        }
+        catch (Exception e)
+        {
+
+        }
+        if(!SharedPref.LOCATION_INFO.isEmpty() && !SharedPref.LOCATION_INFO.equals(""))
+        {
+            neighborhood_et.setText(SharedPref.LOCATION_INFO);
+            SharedPref.LOCATION_INFO = "";
+        }
+        if(!SharedPref.CAMPI_INFO.isEmpty() && !SharedPref.CAMPI_INFO.equals(""))
+        {
+            center_et.setText(SharedPref.CAMPI_INFO);
+            SharedPref.CAMPI_INFO = "";
+        }
+        super.onResume();
     }
 
     @OnClick(R.id.neighborhood_et)
     public void neighborhoodEt() {
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                String selectedZone = getSelectedValue().toString();
-                zone = selectedZone;
-                if (selectedZone.equals("Outros")) {
-                    showOtherNeighborhoodDialog();
-                } else {
-                    locationEt2(selectedZone);
-                }
-                super.onPositiveActionClicked(fragment);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                super.onNegativeActionClicked(fragment);
-            }
-        };
-
-        builder.items(Util.getZones(), 0)
-                .title(getContext().getString(R.string.frag_rideOffer_pickZone))
-                .positiveAction(getContext().getString(R.string.ok))
-                .negativeAction(getContext().getString(R.string.cancel));
-        DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(getFragmentManager(), null);
-    }
-
-    public void showOtherNeighborhoodDialog() {
-        Dialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-
-            @Override
-            protected void onBuildDone(Dialog dialog) {
-                dialog.layoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            }
-
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                EditText neighborhood_et2 = (EditText) fragment.getDialog().findViewById(R.id.neighborhood_et);
-                String neighborhood = neighborhood_et2.getText().toString();
-                if (!neighborhood.isEmpty()) {
-                    neighborhood_et.setText(neighborhood);
-                }
-
-                super.onPositiveActionClicked(fragment);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                super.onNegativeActionClicked(fragment);
-            }
-        };
-
-        builder.title(getActivity().getString(R.string.frag_ridesearch_typeNeighborhood))
-                .positiveAction(getString(R.string.ok))
-                .negativeAction(getString(R.string.cancel))
-                .contentView(R.layout.other_neighborhood);
-
-        DialogFragment fragment2 = DialogFragment.newInstance(builder);
-        fragment2.show(getActivity().getSupportFragmentManager(), null);
-    }
-
-    public void locationEt2(String zone) {
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                neighborhood_et.setText(getSelectedValue());
-                super.onPositiveActionClicked(fragment);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                super.onNegativeActionClicked(fragment);
-            }
-        };
-
-        builder.items(Util.getNeighborhoods(zone), 0)
-                .title(getContext().getString(R.string.frag_rideOffer_pickNeighborhood))
-                .positiveAction(getContext().getString(R.string.ok))
-                .negativeAction(getContext().getString(R.string.cancel));
-        DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(getFragmentManager(), null);
-    }
-
-    @OnClick(R.id.campi_et)
-    public void campiEt() {
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                campi_et.setText(getSelectedValue());
-                if ((campi_et.getText().toString().equals("") || campi_et.getText().toString().equals(Util.getCampi()[2]) && (going))) {
-//                    center_et.setVisibility(View.GONE);
-                } else
-                    center_et.setVisibility(View.VISIBLE);
-                super.onPositiveActionClicked(fragment);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                super.onNegativeActionClicked(fragment);
-            }
-        };
-
-        builder.items(Util.getCampiWithoutAllCampi(), 0)
-                .title(getContext().getString(R.string.frag_rideOffer_pickCampi))
-                .positiveAction(getContext().getString(R.string.ok))
-                .negativeAction(getContext().getString(R.string.cancel));
-        DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(getFragmentManager(), null);
+        Intent intent = new Intent(getActivity(), PlaceAct.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("backText", "Criar");
+        intent.putExtra("selection", "neigh");
+        intent.putExtra("allP", false);
+        intent.putExtra("otherP", true);
+        startActivity(intent);
+        getActivity().overridePendingTransition(R.anim.anim_right_slide_in, R.anim.anim_left_slide_out);
     }
 
     @OnClick(R.id.center_et)
     public void centerEt() {
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                center_et.setText(getSelectedValue());
-                super.onPositiveActionClicked(fragment);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                super.onNegativeActionClicked(fragment);
-            }
-        };
-
-        if (going) {
-            builder.items(Util.getCentersWithoutAllCenters(), 0)
-                    .title(getContext().getString(R.string.frag_rideOffer_pickCenter))
-                    .positiveAction(getContext().getString(R.string.ok))
-                    .negativeAction(getContext().getString(R.string.cancel));
-            DialogFragment fragment = DialogFragment.newInstance(builder);
-            fragment.show(getFragmentManager(), null);
-        } else {
-            builder.items(Util.getFundaoHubs(), 0)
-                    .title(getContext().getString(R.string.frag_rideOffer_pickHub))
-                    .positiveAction(getContext().getString(R.string.ok))
-                    .negativeAction(getContext().getString(R.string.cancel));
-            DialogFragment fragment = DialogFragment.newInstance(builder);
-            fragment.show(getFragmentManager(), null);
-//            if (campi_et.getText().toString().equals("")){
-//                campi_et.setError("Escolher o campus");
-//            } else {
-//                if (campi_et.getText().toString().equals(Util.getCampi()[1])) {
-//                    builder.items(Util.getFundaoHubs(), 0);
-//                }
-//                if (campi_et.getText().toString().equals(Util.getCampi()[2])) {
-//                    builder.items(Util.getPraiaVermelhaHubs(), 0);
-//                }
-//                DialogFragment fragment = DialogFragment.newInstance(builder);
-//                fragment.show(getFragmentManager(), null);
-//            }
+        Intent intent = new Intent(getActivity(), PlaceAct.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("backText", "Criar");
+        if(going) {
+            intent.putExtra("selection", "center");
         }
-    }
-
-    @OnClick(R.id.date_et)
-    public void date_et() {
-        Dialog.Builder builder = new DatePickerDialog.Builder(R.style.Material_App_Dialog_DatePicker_Light) {
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                DatePickerDialog dialog = (DatePickerDialog) fragment.getDialog();
-                date_et.setText(dialog.getFormattedDate(new SimpleDateFormat("dd/MM/yyyy", Locale.US)));
-                super.onPositiveActionClicked(fragment);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                super.onNegativeActionClicked(fragment);
-            }
-        };
-
-        builder.positiveAction(getContext().getString(R.string.ok))
-                .negativeAction(getContext().getString(R.string.cancel));
-
-        DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(getFragmentManager(), null);
+        else
+        {
+            intent.putExtra("selection", "hub");
+        }
+        intent.putExtra("allP", false);
+        intent.putExtra("otherP", false);
+        startActivity(intent);
+        getActivity().overridePendingTransition(R.anim.anim_right_slide_in, R.anim.anim_left_slide_out);
     }
 
     @OnClick(R.id.time_et)
     public void time_et() {
-        Dialog.Builder builder = new TimePickerDialog.Builder(R.style.Material_App_Dialog_TimePicker_Light, 24, 0) {
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                TimePickerDialog dialog = (TimePickerDialog) fragment.getDialog();
-                time_et.setText(dialog.getFormattedTime(new SimpleDateFormat("HH:mm", Locale.US)));
-                super.onPositiveActionClicked(fragment);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                super.onNegativeActionClicked(fragment);
-            }
-        };
-
-        builder.positiveAction(getContext().getString(R.string.ok))
-                .negativeAction(getContext().getString(R.string.cancel));
-
-        DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(getFragmentManager(), null);
+        Activity activity = getActivity();
+        CustomDateTimePicker cdtp;
+        if(going) {
+            if(SharedPref.getGoingLabel() == null)
+                cdtp = new CustomDateTimePicker(activity, getResources().getString(R.string.arriving_ufrj), time, this, "Offer");
+            else
+                cdtp = new CustomDateTimePicker(activity, SharedPref.getGoingLabel(), time, this, "Offer");
+        }else
+        {
+            if(SharedPref.getLeavingLabel() == null)
+                cdtp = new CustomDateTimePicker(activity, getResources().getString(R.string.leaving_ufrj), time, this, "Offer");
+            else
+                cdtp = new CustomDateTimePicker(activity, SharedPref.getLeavingLabel(), time, this, "Offer");
+        }
+        Window window = cdtp.getWindow();
+        WindowManager.LayoutParams wlp = window.getAttributes();
+        wlp.gravity = Gravity.BOTTOM;
+        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+        window.setAttributes(wlp);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.copyFrom(cdtp.getWindow().getAttributes());
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+        lp.height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 320, getResources().getDisplayMetrics());
+        cdtp.show();
+        cdtp.getWindow().setAttributes(lp);
     }
 
     @OnClick(R.id.routine_cb)
@@ -385,73 +331,74 @@ public class RideOfferFrag extends Fragment {
 
     @OnClick(R.id.send_bt)
     public void sendBt() {
-        if (!checkCarOwnerDialog())
+        Activity act = getActivity();
+        Fragment frag = this;
+        if (!checkCarOwnerDialog()) {
             return;
-
+        }
         String neighborhood = neighborhood_et.getText().toString();
-        if (neighborhood.isEmpty()) {
-            Util.toast(getString(R.string.frag_rideoffer_nullNeighborhood));
+        String hubCenter = center_et.getText().toString();
+        String zone = Util.whichZone(neighborhood);
+        if(hubCenter.isEmpty() || neighborhood.isEmpty() || hubCenter.equals("Centro Universitário") || hubCenter.equals("Escolha o hub de encontro") || neighborhood.equals("Bairro"))
+        {
+            CustomDialogClass cdc = new CustomDialogClass(act,"ROFD", frag);
+            cdc.show();
+            cdc.setTitleText("Dados incompletos");
+            cdc.setMessageText( "Ops! Parece que você esqueceu de preencher o local da sua carona.");
+            cdc.setPButtonText("OK");
+            cdc.enableOnePositiveOption();
             return;
         }
         String place = place_et.getText().toString();
         String way = way_et.getText().toString();
-
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.US);
-        String etDateString = date_et.getText().toString();
-        Date todayDate = new Date();
-        String todayString = simpleDateFormat.format(todayDate);
-        try {
-            todayDate = simpleDateFormat.parse(todayString);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        if (etDateString.isEmpty()) {
-            Util.toast(getString(R.string.frag_rideoffer_nullDate));
-            return;
-        } else {
-            try {
-                Date etDate = simpleDateFormat.parse(etDateString);
-                if (etDate.before(todayDate)) {
-                    Util.toast(getActivity().getString(R.string.frag_rideoffersearch_pastdate));
-                    return;
-                }
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        String time = time_et.getText().toString();
-        if (time.isEmpty()) {
-            Util.toast(getString(R.string.frag_rideoffer_nullTime));
-            return;
-        }
-        String slots = slots_et.getSelectedItemPosition() + 1 + "";
+        //39/19/9999 24:69
+        //0123456789012345
+        String time = time_et.getText().toString().substring(11)+":00";
+        String date = time_et.getText().toString().substring(0,10);
         String description = description_et.getText().toString();
 
-        String hub = center_et.getText().toString();
-        if (hub.isEmpty()) {
-            if (going) {
-                center_et.setText(Util.getFundaoCenters()[0]);
-                hub = center_et.getText().toString();
-            } else {
-                center_et.setText(Util.getFundaoHubs()[0]);
-                hub = center_et.getText().toString();
-            }
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+        Date currentDate = new Date(System.currentTimeMillis()+5*60*1000);
+        String getCurrentDateTime = simpleDateFormat.format(currentDate);
+        String dateToCompare = date + " " + time.substring(0,time.length()-3);
+        Date time1 = new Date(), time2 = new Date();
+        try
+        {
+            time1 = simpleDateFormat.parse(getCurrentDateTime);
+            time2 = simpleDateFormat.parse(dateToCompare);
+        }
+        catch (Exception e)
+        {
+            Util.debug("Error while setting date");
+        }
+
+        if (time1.after(time2))
+        {
+            CustomDialogClass cdc = new CustomDialogClass(act,"ROFD", frag);
+            cdc.show();
+            cdc.setTitleText( "Não foi possível validar sua carona");
+            cdc.setMessageText("Houve um erro ao criar sua carona. Não é possível criar caronas no passado ou com menos de 5 minutos de antecedência. Por favor, selecione outra data e tente novamente.");
+            cdc.setPButtonText("OK");
+            cdc.enableOnePositiveOption();
+            return;
         }
 
         boolean routine = routine_cb.isChecked();
         String weekDays = "", repeatsUntil = "";
+
         if (routine) {
-            weekDays = monday_cb.isChecked() ? "1," : "";
-            weekDays += tuesday_cb.isChecked() ? "2," : "";
-            weekDays += wednesday_cb.isChecked() ? "3," : "";
-            weekDays += thursday_cb.isChecked() ? "4," : "";
-            weekDays += friday_cb.isChecked() ? "5," : "";
-            weekDays += saturday_cb.isChecked() ? "6," : "";
-            weekDays += sunday_cb.isChecked() ? "7," : "";
+            for(int i = 0; i < 7; i++)
+            {
+                weekDays = weekDays.concat(checked[i] ? (i+1)+"," : "");
+            }
 
             if (weekDays.isEmpty()) {
-                Util.toast(R.string.frag_rideOffer_noRoutineDays);
+                CustomDialogClass cdc = new CustomDialogClass(act,"ROFD", frag);
+                cdc.show();
+                cdc.setTitleText("Dados incompletos");
+                cdc.setMessageText("Ops! Parece que você esqueceu de marcar os dias da rotina.");
+                cdc.setPButtonText("OK");
+                cdc.enableOnePositiveOption();
                 return;
             }
             weekDays = weekDays.substring(0, weekDays.length() - 1);
@@ -471,126 +418,430 @@ public class RideOfferFrag extends Fragment {
             }
 
             Calendar c = Calendar.getInstance();
+            SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
             try {
-                c.setTime(simpleDateFormat.parse(etDateString));
+                Date d = format.parse(date);
+                c.setTime(d);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
             c.add(Calendar.MONTH, months);
-            repeatsUntil = simpleDateFormat.format(c.getTime());
+            repeatsUntil = Util.formatBadDateWithYear(simpleDateFormat.format(c.getTime()));
         }
 
-        String campus = campi_et.getText().toString();
+        ride = new RideOffer(time, neighborhood, repeatsUntil, description, place, going, date, 0, slots, zone, weekDays, hubCenter, way);
 
-        final Ride ride = new Ride(zone, neighborhood, place, way, etDateString, time, slots, hub, campus, description, going, routine, weekDays, repeatsUntil);
-
-
-        checkAndCreateRide(ride);
+        checkAndCreateRide();
 
         String lastRideOffer = new Gson().toJson(ride);
-        if (going)
+        if (going) {
             SharedPref.saveLastRideGoingPref(lastRideOffer);
-        else
+        }
+        else {
             SharedPref.saveLastRideNotGoingPref(lastRideOffer);
+        }
     }
 
-    private void createChatAssets(Ride ride) {
-        Util.createChatAssets(ride, getContext());
-    }
-
-    private void checkAndCreateRide(final Ride ride) {
+    private void checkAndCreateRide() {
+        Activity act = getActivity();
+        Fragment frag = this;
         pd = ProgressDialog.show(getContext(), "", getString(R.string.wait), true, true);
-        App.getNetworkService(getContext()).validateDuplicates(ride.getDate(), ride.getTime() + ":00", ride.isGoing() ? 1 : 0)
+        CaronaeAPI.service().validateDuplicates(ride.getDate(), ride.getTime(), ride.isGoing() ? 1 : 0)
                 .enqueue(new Callback<ModelValidateDuplicate>() {
                     @Override
                     public void onResponse(Call<ModelValidateDuplicate> call, Response<ModelValidateDuplicate> response) {
                         if (response.isSuccessful()) {
                             ModelValidateDuplicate validateDuplicate = response.body();
                             if (validateDuplicate.isValid()) {
-                                createRide(ride);
+                                createRide();
+                                changeFragment();
                             } else {
+                                CustomDialogClass cdc;
                                 if (validateDuplicate.getStatus().equals("possible_duplicate")) {
-                                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                                    builder.setView(R.layout.possible_duplicate_rides_dialog);
-                                    builder.setPositiveButton("Criar", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            createRide(ride);
-                                        }
-                                    });
-                                    builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            dialogInterface.dismiss();
-                                        }
-                                    });
-                                    builder.create().show();
-                                } else {
-                                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                                    builder.setView(R.layout.duplicate_rides_dialog);
-                                    builder.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            dialogInterface.dismiss();
-                                        }
-                                    });
-                                    builder.create().show();
+                                    cdc = new CustomDialogClass(act,"ROFPD", frag);
+                                    cdc.show();
+                                    cdc.setTitleText( "Parece que você já ofereceu uma carona para este dia");
+                                    cdc.setMessageText("Você pode cancelar e verificar as suas caronas ou continuar e criar a carona mesmo assim.");
+                                    cdc.setNButtonText("Criar");
+                                    cdc.setPButtonText("Cancelar");
+                                    cdc.setNegativeButtonColor(getResources().getColor(R.color.darkblue));
+
+                                } else{
+                                    cdc = new CustomDialogClass(act,"ROFD", frag);
+                                    cdc.show();
+                                    cdc.setTitleText( "Você já ofereceu uma carona muito parecida com essa");
+                                    cdc.setMessageText("Você pode verificar as suas caronas na seção 'Minhas' do aplicativo.");
+                                    cdc.setPButtonText("OK");
+                                    cdc.enableOnePositiveOption();
                                 }
                             }
                         } else {
+                            CustomDialogClass cdc = new CustomDialogClass(act,"ROFD", frag);;
+                            cdc.show();
+                            cdc.setTitleText( "Não foi possível validar sua carona");
+                            cdc.setMessageText("Houve um erro de comunicação com nosso servidor. Por favor, tente novamente.");
+                            cdc.setPButtonText("OK");
+                            cdc.enableOnePositiveOption();
                         }
                         pd.dismiss();
                     }
 
                     @Override
                     public void onFailure(Call<ModelValidateDuplicate> call, Throwable t) {
+                        CustomDialogClass cdc = new CustomDialogClass(act,"ROFD", frag);;
+                        cdc.show();
+                        cdc.setTitleText( "Não foi possível validar sua carona");
+                        cdc.setMessageText("Houve um erro de comunicação com nosso servidor. Por favor, tente novamente. "+t.getLocalizedMessage());
+                        cdc.setPButtonText("OK");
+                        cdc.enableOnePositiveOption();
                         pd.dismiss();
                     }
                 });
     }
 
-    private void createRide(Ride ride) {
-        App.getNetworkService(getContext()).offerRide(ride)
-                .enqueue(new Callback<List<RideRountine>>() {
+    public void createRide() {
+        final Activity activity = getActivity();
+        final Fragment fragment = this;
+        CaronaeAPI.service().offerRide(ride)
+                .enqueue(new Callback<ResponseBody>() {
                     @Override
-                    public void onResponse(Call<List<RideRountine>> call, Response<List<RideRountine>> response) {
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         if (response.isSuccessful()) {
-
-                            List<RideRountine> rideRountines = response.body();
-                            List<Ride> rides = new ArrayList<>();
-                            for (RideRountine rideRountine : rideRountines) {
-                                rides.add(new Ride(rideRountine));
-                            }
-
-                            for (Ride ride : rides) {
-                                Ride ride2 = new Ride(ride);
-                                ride2.setDbId(ride.getId().intValue());
-                                FirebaseTopicsHandler.subscribeFirebaseTopic(String.valueOf(ride.getId().intValue()));
-                                ride2.save();
-                                createChatAssets(ride2);
-                            }
                             pd.dismiss();
-                            ((MainAct) getActivity()).removeFromBackstack(RideOfferFrag.class);
-                            ((MainAct) getActivity()).showActiveRidesFrag();
-                            Util.toast(R.string.frag_rideOffer_rideSaved);
+                            SharedPref.lastAllRidesUpdate = null;
+                            SharedPref.lastMyRidesUpdate = 350;
+                            changeFragment();
                         } else {
                             Util.treatResponseFromServer(response);
                             pd.dismiss();
+                            CustomDialogClass cdc = new CustomDialogClass(activity,"ROFD", fragment);;
+                            cdc.show();
                             if (response.code() == 403) {
-                                Util.toast(R.string.past_ride_creation);
+                                cdc.setTitleText( "Não foi possível validar sua carona");
+                                cdc.setMessageText("Houve um erro ao criar sua carona. Não é possível criar caronas no passado. Por favor, tente novamente.");
+                                cdc.setPButtonText("OK");
+                                cdc.enableOnePositiveOption();
                             } else {
-                                Util.toast(R.string.frag_rideOffer_errorRideSaved);
-                                Log.e("offerRide", response.message());
+                                cdc.show();
+                                cdc.setTitleText( "Não foi possível validar sua carona");
+                                cdc.setMessageText("Houve um erro de comunicação com nosso servidor. Por favor, tente novamente." + response.message());
+                                cdc.setPButtonText("OK");
+                                Log.e("error " , response.message());
+                                cdc.enableOnePositiveOption();
                             }
                         }
                     }
 
                     @Override
-                    public void onFailure(Call<List<RideRountine>> call, Throwable t) {
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        CustomDialogClass cdc = new CustomDialogClass(activity,"ROFD", fragment);;
+                        cdc.show();
+                        cdc.setTitleText( "Não foi possível validar sua carona");
+                        cdc.setMessageText("Houve um erro de comunicação com nosso servidor. Por favor, tente novamente. "+t.getLocalizedMessage());
+                        cdc.setPButtonText("OK");
+                        cdc.enableOnePositiveOption();
+                        Log.e("error " , t.getMessage());
                         pd.dismiss();
-                        Util.toast(R.string.frag_rideOffer_errorRideSaved);
-                        Log.e("offerRide", t.getMessage());
                     }
                 });
+    }
+
+    public void changeFragment()
+    {
+        Fragment fragment = null;
+        try {
+            fragment = (Fragment) MyRidesFrag.class.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        fragmentManager.popBackStack();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.setCustomAnimations(R.anim.anim_up_slide_in, R.anim.anim_down_slide_out);
+        transaction.replace(R.id.flContent, fragment).commit();
+        SharedPref.NAV_INDICATOR = "MyRides";
+        ((MainAct)getActivity()).navigation.getMenu().getItem(1).setChecked(true);
+    }
+
+    private void setInitialDate()
+    {
+        Calendar rightNow = Calendar.getInstance();
+        Date date = rightNow.getTime();
+        SimpleDateFormat dateWithYear = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        String ddmmyyyy = dateWithYear.format(date);
+        int hourInt = rightNow.get(Calendar.HOUR_OF_DAY);
+        int minuteInt = rightNow.get(Calendar.MINUTE) + 5;
+        if(minuteInt >= 60)
+        {
+            hourInt += 2;
+        }
+        else{
+            hourInt += 1;
+        }
+
+        if(hourInt >= 24)
+        {
+            hourInt -= 24;
+            rightNow.add(Calendar.DAY_OF_YEAR, 1);
+            date = rightNow.getTime();
+            ddmmyyyy = dateWithYear.format(date);
+        }
+
+        if(hourInt < 10)
+        {
+            time = ddmmyyyy + " 0" + hourInt + ":00";
+        }
+        else
+        {
+            time = ddmmyyyy + " " + hourInt + ":00";
+        }
+
+        time_et.setText(time);
+    }
+
+    private void setHint()
+    {
+        String lastRideOffer = going ? SharedPref.getLastRideGoingPref() : SharedPref.getLastRideNotGoingPref();
+
+        if (!lastRideOffer.equals(SharedPref.MISSING_PREF)) {
+            ride = new Gson().fromJson(lastRideOffer, RideOffer.class);
+            center_et.setText(ride.getHub());
+        }
+        else
+        {
+            String newRide = going ? "Centro Universitário" : "Escolha o hub de encontro";
+            center_et.setText(newRide);
+        }
+    }
+
+    @OnClick(R.id.monday_cb)
+    public void monClick()
+    {
+        isChecked(0);
+    }
+
+    @OnClick(R.id.tuesday_cb)
+    public void tueClick()
+    {
+        isChecked(1);
+    }
+
+    @OnClick(R.id.wednesday_cb)
+    public void wedClick()
+    {
+        isChecked(2);
+    }
+
+    @OnClick(R.id.thursday_cb)
+    public void thuClick()
+    {
+        isChecked(3);
+    }
+
+    @OnClick(R.id.friday_cb)
+    public void friClick()
+    {
+        isChecked(4);
+    }
+
+    @OnClick(R.id.saturday_cb)
+    public void satClick()
+    {
+        isChecked(5);
+    }
+
+    @OnClick(R.id.sunday_cb)
+    public void sunClick()
+    {
+        isChecked(6);
+    }
+
+    @OnClick(R.id.remove_slot)
+    public void removeSlotClick()
+    {
+        slots -= 1;
+        updateSlots();
+    }
+
+    @OnClick(R.id.add_slot)
+    public void addSlotClick()
+    {
+        slots += 1;
+        updateSlots();
+    }
+
+    @OnClick(R.id.tab1)
+    public void goingTabSelected()
+    {
+        if(!going)
+        {
+            going = true;
+            setHint();
+            setButton(isLeaving_bt, isGoing_bt,isLeaving_tv, isGoing_tv);
+        }
+    }
+
+    @OnClick(R.id.tab2)
+    public void leavingTabSelected()
+    {
+        if(going)
+        {
+            going = false;
+            setHint();
+            setButton(isGoing_bt, isLeaving_bt, isGoing_tv, isLeaving_tv);
+        }
+    }
+
+    private void setButton(RelativeLayout button1, RelativeLayout button2, TextView bt1_tv, TextView bt2_tv)
+    {
+        button1.setFocusable(true);
+        button1.setClickable(true);
+        button2.setFocusable(false);
+        button2.setClickable(false);
+        GradientDrawable bt1Shape = (GradientDrawable)button1.getBackground();
+        GradientDrawable bt2Shape = (GradientDrawable)button2.getBackground();
+        bt1Shape.setColor(getResources().getColor(R.color.white));
+        bt2Shape.setColor(getResources().getColor(R.color.dark_gray));
+        bt1_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+        bt2_tv.setTextColor(getResources().getColor(R.color.white));
+    }
+
+    private void isChecked(int pos)
+    {
+        if(checked[pos])
+        {
+            checked[pos] = false;
+        }
+        else
+        {
+            checked[pos] = true;
+        }
+        setChecked(pos);
+    }
+
+    private void setChecked(int pos)
+    {
+        GradientDrawable layoutShape = new GradientDrawable();
+        switch (pos)
+        {
+            case 0:
+                layoutShape = (GradientDrawable)monday_cb.getBackground();
+                if(checked[pos])
+                {
+                    mon_tv.setTextColor(getResources().getColor(R.color.white));
+                }
+                else
+                {
+                    mon_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+                }
+                break;
+            case 1:
+                layoutShape = (GradientDrawable)tuesday_cb.getBackground();
+                if(checked[pos])
+                {
+                    tue_tv.setTextColor(getResources().getColor(R.color.white));
+                }
+                else
+                {
+                    tue_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+                }
+                break;
+            case 2:
+                layoutShape = (GradientDrawable)wednesday_cb.getBackground();
+                if(checked[pos])
+                {
+                    wed_tv.setTextColor(getResources().getColor(R.color.white));
+                }
+                else
+                {
+                    wed_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+                }
+                break;
+            case 3:
+                layoutShape = (GradientDrawable)thursday_cb.getBackground();
+                if(checked[pos])
+                {
+                    thu_tv.setTextColor(getResources().getColor(R.color.white));
+                }
+                else
+                {
+                    thu_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+                }
+                break;
+            case 4:
+                layoutShape = (GradientDrawable)friday_cb.getBackground();
+                if(checked[pos])
+                {
+                    fri_tv.setTextColor(getResources().getColor(R.color.white));
+                }
+                else
+                {
+                    fri_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+                }
+                break;
+            case 5:
+                layoutShape = (GradientDrawable)saturday_cb.getBackground();
+                if(checked[pos])
+                {
+                    sat_tv.setTextColor(getResources().getColor(R.color.white));
+                }
+                else
+                {
+                    sat_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+                }
+                break;
+            case 6:
+                layoutShape = (GradientDrawable)sunday_cb.getBackground();
+                if(checked[pos])
+                {
+                    sun_tv.setTextColor(getResources().getColor(R.color.white));
+                }
+                else
+                {
+                    sun_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+                }
+                break;
+        }
+
+        if(checked[pos])
+        {
+            layoutShape.setColor(getResources().getColor(R.color.dark_gray));
+        }
+        else
+        {
+            layoutShape.setColor(getResources().getColor(R.color.white));
+        }
+    }
+
+    private void updateSlots()
+    {
+        if(slots <= 1)
+        {
+            removeSlotButton.setFocusable(false);
+            removeSlotButton.setClickable(false);
+            addSlotButton.setFocusable(true);
+            addSlotButton.setClickable(true);
+            remove_tv.setTextColor(getResources().getColor(R.color.gray));
+            add_tv.setTextColor(getResources().getColor(R.color.black));
+        }
+        else if(slots >= 6)
+        {
+            addSlotButton.setFocusable(false);
+            addSlotButton.setClickable(false);
+            removeSlotButton.setFocusable(true);
+            removeSlotButton.setClickable(true);
+            remove_tv.setTextColor(getResources().getColor(R.color.black));
+            add_tv.setTextColor(getResources().getColor(R.color.gray));
+        }
+        else
+        {
+            removeSlotButton.setFocusable(true);
+            removeSlotButton.setClickable(true);
+            addSlotButton.setFocusable(true);
+            addSlotButton.setClickable(true);
+            remove_tv.setTextColor(getResources().getColor(R.color.black));
+            add_tv.setTextColor(getResources().getColor(R.color.black));
+        }
+        slotNumber.setText(Integer.toString(slots));
     }
 }

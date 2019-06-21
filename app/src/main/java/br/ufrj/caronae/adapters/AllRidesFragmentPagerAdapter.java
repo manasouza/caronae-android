@@ -1,5 +1,7 @@
 package br.ufrj.caronae.adapters;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -7,45 +9,62 @@ import android.support.v4.app.FragmentPagerAdapter;
 
 import java.util.ArrayList;
 
+import br.ufrj.caronae.R;
 import br.ufrj.caronae.frags.AllRidesListFrag;
+import br.ufrj.caronae.interfaces.Updatable;
 import br.ufrj.caronae.models.modelsforjson.RideForJson;
 
-public class AllRidesFragmentPagerAdapter extends FragmentPagerAdapter {
-    final int PAGE_COUNT = 2;
+public class AllRidesFragmentPagerAdapter extends FragmentPagerAdapter implements Updatable {
     final public static int PAGE_GOING = 0;
-    final public static int PAGE_NOT_GOING = 1;
-    private String tabTitles[];
-    private Fragment frags[];
+    final private static int PAGE_NOT_GOING = 1;
+    private final AllRidesListFrag notGoingFrag;
+    private final AllRidesListFrag goingFrag;
+    private final Context context;
 
-    public AllRidesFragmentPagerAdapter(FragmentManager fm, ArrayList<RideForJson> goingRides, ArrayList<RideForJson> notGoingRides, String[] tabTitles) {
+    public AllRidesFragmentPagerAdapter(FragmentManager fm, Context context, ArrayList<RideForJson> goingRides, ArrayList<RideForJson> notGoingRides) {
         super(fm);
+        this.context = context;
 
-        this.tabTitles = tabTitles;
+        Bundle goingBundle = new Bundle();
+        goingBundle.putParcelableArrayList("rides", goingRides);
+        goingBundle.putInt("ID", PAGE_GOING);
+        goingFrag = new AllRidesListFrag();
+        goingFrag.setArguments(goingBundle);
 
-        Bundle bundle1 = new Bundle(), bundle2 = new Bundle();
-        bundle1.putParcelableArrayList("rides", goingRides);
-        bundle1.putInt("ID", PAGE_GOING);
-        bundle2.putParcelableArrayList("rides", notGoingRides);
-        bundle2.putInt("ID", PAGE_NOT_GOING);
-        Fragment f1 = new AllRidesListFrag(), f2 = new AllRidesListFrag();
-        f1.setArguments(bundle1);
-        f2.setArguments(bundle2);
-        frags = new Fragment[]{f1, f2};
+        Bundle notGoingBundle = new Bundle();
+        notGoingBundle.putParcelableArrayList("rides", notGoingRides);
+        notGoingBundle.putInt("ID", PAGE_NOT_GOING);
+        notGoingFrag = new AllRidesListFrag();
+        notGoingFrag.setArguments(notGoingBundle);
     }
 
     @Override
     public int getCount() {
-        return PAGE_COUNT;
+        return 2;
     }
 
     @Override
     public Fragment getItem(int position) {
-        return frags[position];
+        if (position == 0) {
+            return goingFrag;
+        }
+
+        return notGoingFrag;
     }
 
     @Override
     public CharSequence getPageTitle(int position) {
-        // Generate title based on item position
-        return tabTitles[position];
+        Resources resources = context.getResources();
+        if (position == 0) {
+            return resources.getString(R.string.arriving_ufrj);
+        }
+
+        return resources.getString(R.string.leaving_ufrj);
+    }
+
+    @Override
+    public void needsUpdating() {
+        goingFrag.needsUpdating();
+        notGoingFrag.needsUpdating();
     }
 }

@@ -1,96 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/all_rides_coordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:layout_marginBottom="30dp">
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent" />
+        android:background="@color/transparency" />
 
-    <android.support.design.widget.TabLayout
-        android:id="@+id/sliding_tabs"
+    <LinearLayout
+        android:id="@+id/tabs"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/tab_indicator_height"
-        android:layout_alignParentTop="true"
-        android:paddingBottom="@dimen/tab_indicator_padding_botton"
-        android:paddingTop="8dp"
-        app:tabTextAppearance="@style/TabLayoutTextAppearance"
-        app:tabBackground="@drawable/tab_background_selector"
-        app:tabIndicatorHeight="0dp" />
+        android:layout_height="30dp"
+        android:weightSum="2"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginStart="25dp"
+        android:layout_marginRight="25dp"
+        android:layout_marginEnd="25dp"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal">
 
-    <ProgressBar
-        android:id="@+id/progressBar2"
-        style="?android:attr/progressBarStyleInverse"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
-        android:layout_centerHorizontal="true" />
+        <RelativeLayout
+            android:id="@+id/tab1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/tab_left"
+            android:layout_marginRight="-2dp"
+            android:layout_marginEnd="-2dp">
 
+            <TextView
+                android:id="@+id/tab1_tv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:text="@string/arriving_ufrj"/>
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/tab2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginLeft="-2dp"
+            android:layout_marginStart="-2dp"
+            android:background="@drawable/tab_right">
+            <TextView
+                android:id="@+id/tab2_tv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:gravity="center"
+                android:text="@string/leaving_ufrj"
+                android:textColor="@color/dark_gray"/>
 
-
-
-    <com.github.clans.fab.FloatingActionMenu xmlns:fab="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/fab_menu"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
-        android:layout_gravity="bottom|right"
-        android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:visibility="invisible"
-        fab:menu_animationDelayPerItem="50"
-        fab:menu_backgroundColor="@android:color/transparent"
-        fab:menu_buttonSpacing="0dp"
-        fab:menu_colorPressed="@color/fab_red"
-        fab:menu_colorRipple="#99FFFFFF"
-        fab:menu_fab_size="normal"
-        fab:menu_icon="@drawable/fab_add"
-        fab:menu_labels_colorNormal="@color/default_white_transparency"
-        fab:menu_labels_colorPressed="@android:color/white"
-        fab:menu_labels_colorRipple="@color/gray_transparency"
-        fab:menu_labels_cornerRadius="3dp"
-        fab:menu_labels_ellipsize="none"
-        fab:menu_labels_hideAnimation="@anim/fab_slide_out_to_right"
-        fab:menu_labels_margin="0dp"
-        fab:menu_labels_paddingLeft="8dp"
-        fab:menu_labels_paddingRight="8dp"
-        fab:menu_labels_paddingTop="4dp"
-        fab:menu_labels_position="left"
-        fab:menu_labels_showAnimation="@anim/fab_slide_in_from_right"
-        fab:menu_labels_showShadow="true"
-        fab:menu_labels_singleLine="true"
-        fab:menu_labels_textColor="@android:color/black"
-        fab:menu_labels_textSize="14sp"
-        fab:menu_openDirection="up"
-        fab:menu_shadowColor="#66000000">
-
-
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_active_rides"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_directions_car_white_24dp"
-            fab:fab_colorNormal="@color/green"
-            fab:fab_colorPressed="@color/light_zone_sul_transparency"
-            fab:fab_label="@string/frag_myactiverides_title"
-            fab:fab_size="mini" />
-
-
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_add_ride"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_add_white_24dp"
-            fab:fab_colorNormal="@color/yellow"
-            fab:fab_colorPressed="@color/light_zone_centro_transparency"
-            fab:fab_label="@string/act_main_setRideOfferFragTitle"
-            fab:fab_size="mini" />
-
-    </com.github.clans.fab.FloatingActionMenu>
-
+        </RelativeLayout>
+    </LinearLayout>
 </android.support.design.widget.CoordinatorLayout>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="br.ufrj.caronae">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -7,6 +8,10 @@
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:name=".App"
@@ -14,7 +19,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:vmSafeMode="true">
         <meta-data
             android:name="DATABASE"
             android:value="caronaee.db" />
@@ -46,11 +52,16 @@
             android:label="@string/title_activity_main"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
+
+        <activity android:name=".acts.RideSearchAct"
+            android:label="@string/title_activity_ride_search"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".acts.LoginAct"
             android:label="@string/title_activity_login"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateVisible" />
+            android:windowSoftInputMode="stateVisible"></activity>
         <activity
             android:name=".acts.OpeningAct"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -58,10 +69,11 @@
             android:screenOrientation="portrait"
             android:theme="@style/FullscreenTheme" />
         <activity
-            android:name=".acts.SignUpAct"
-            android:label="@string/title_activity_sign_up"
+            android:name=".acts.WelcomeAct"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_first_login"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/FullscreenTheme" />
         <activity
             android:name=".acts.ChatAct"
             android:label="@string/app_name"
@@ -71,17 +83,30 @@
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:label="@string/app_name"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            tools:replace="android:theme" />
         <activity
             android:name=".acts.ProfileAct"
             android:label="@string/title_activity_profile"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".acts.ActiveRideAct"
-            android:label="@string/app_name"
+            android:name=".acts.FalaeAct"
+            android:label="@string/title_activity_falae"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".acts.RideOfferAct"
+            android:name=".acts.MenuOptionsAct"
+            android:label="@string/title_activity_menu_options"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".acts.MyProfileAct"
+            android:label="@string/title_activity_my_profile"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".acts.PlaceAct"
+            android:label="@string/title_activity_place"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".acts.BrowsableAct"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -94,9 +119,13 @@
             </intent-filter>
             <intent-filter>
                 <data
-                    android:host="caronae.com.br"
-                    android:scheme="https"
-                    android:pathPrefix="/carona/"/>
+                    android:host="caronae.org"
+                    android:pathPrefix="/carona/"
+                    android:scheme="https" />
+                <data
+                    android:host="caronae.org"
+                    android:pathPrefix="/login/"
+                    android:scheme="https" />
 
                 <action android:name="android.intent.action.VIEW" />
 
@@ -105,10 +134,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".acts.RequestersListAct"
-            android:exported="true"
+            android:name=".acts.RideDetailAct"
             android:label="@string/app_name"
             android:screenOrientation="portrait" />
+
+        <activity android:name=".acts.MediaAct"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="portrait"/>
 
         <service android:name=".firebase.MyFirebaseMessagingService">
             <intent-filter>
@@ -118,7 +150,7 @@
         <service
             android:name=".firebase.FetchReceivedMessagesService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
         <service
             android:name=".asyncs.FetchMyOfferedRidesService"
             android:exported="false" />

@@ -17,21 +17,17 @@ import java.util.Map;
 
 import br.ufrj.caronae.App;
 import br.ufrj.caronae.R;
-import br.ufrj.caronae.SharedPref;
+import br.ufrj.caronae.data.SharedPref;
 import br.ufrj.caronae.acts.ChatAct;
 import br.ufrj.caronae.acts.MainAct;
-import br.ufrj.caronae.models.ActiveRide;
 import br.ufrj.caronae.models.ChatAssets;
 import br.ufrj.caronae.models.ChatMessageReceived;
 import br.ufrj.caronae.models.RideEndedEvent;
 import br.ufrj.caronae.models.RideRequestReceived;
 
-/**
- * Created by Luis-DELL on 10/28/2016.
- */
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
-    private static final int MESSAGE_NOTIFICATION_ID = 435345;
+    private static final int MESSAGE_NOTIFICATION_ID           = 435345;
 
     private static final String MSG_TYPE_ALERT                 = "alert";
 
@@ -96,46 +92,33 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 if (msgType != null && msgType.equals("finished")) {
                     FirebaseTopicsHandler.unsubscribeFirebaseTopic(rideId);
                     App.getBus().post(new RideEndedEvent(rideId));
-                    ActiveRide.deleteAll(ActiveRide.class, "db_id = ?", rideId);
                 }
 
                 // TODO: Carona cancelada Nao esta rebendo notificacao
                 if (msgType != null && msgType.equals("cancelled")) {
                     FirebaseTopicsHandler.unsubscribeFirebaseTopic(rideId);
                     App.getBus().post(new RideEndedEvent(rideId));
-                    ActiveRide.deleteAll(ActiveRide.class, "db_id = ?", rideId);
                 }
 
                 if (msgType != null && msgType.equals("accepted")) {
                     FirebaseTopicsHandler.CheckSubFirebaseTopic(rideId);
-                    //new DeleteConflictingRequests().execute(rideId);
                 }
-
-//        if (msgType != null && msgType.equals("refused")) {
-//            FirebaseTopicsHandler.CheckSubFirebaseTopic(rideId);
-//            //new DeleteConflictingRequests().execute(rideId);
-//        }
-//
-//        if (msgType != null && msgType.equals("quitter")) {
-//            FirebaseTopicsHandler.CheckSubFirebaseTopic(rideId);
-//            //new DeleteConflictingRequests().execute(rideId);
-//        }
 
                 if (SharedPref.getNotifPref().equals("true"))
                     if (msgType != null && msgType.equals("chat")) {
                         if (!SharedPref.getChatActIsForeground()) {
-                            createNotification(msgType, senderName, message, rideId);
+                            createNotification(msgType, message, rideId);
                         } else {
                             App.getBus().post(rideId);
                         }
                     } else
-                        createNotification(msgType, senderName, message, rideId);
+                        createNotification(msgType, message, rideId);
 
             }
         }
     }
 
-    private void createNotification(String msgType, String senderName, String message, String rideId) {
+    private void createNotification(String msgType, String message, String rideId) {
         String title;
         Intent resultIntent;
         if (msgType.equals("chat")) {
@@ -165,7 +148,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
 
-        Context context = App.inst();
+        Context context = App.getInst();
         Uri alarmSound = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.beep);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.ic_stat_name)

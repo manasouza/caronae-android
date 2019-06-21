@@ -8,8 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.ufrj.caronae.App;
-import br.ufrj.caronae.SharedPref;
+import br.ufrj.caronae.data.SharedPref;
 import br.ufrj.caronae.Util;
+import br.ufrj.caronae.httpapis.CaronaeAPI;
 import br.ufrj.caronae.models.ChatMessageReceived;
 import br.ufrj.caronae.models.ChatMessageReceivedFromJson;
 import br.ufrj.caronae.models.ModelReceivedFromChat;
@@ -17,9 +18,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/**
- * Created by Luis on 1/12/2017.
- */
 public class FetchReceivedMessagesService extends IntentService {
 
     private static List<ChatMessageReceived> chatMsgsList;
@@ -27,12 +25,10 @@ public class FetchReceivedMessagesService extends IntentService {
 
     public FetchReceivedMessagesService() {
         super("MyFirebaseMessagingService");
-
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         rideId = intent.getExtras().getString("rideId");
 
         chatMsgsList = ChatMessageReceived.find(ChatMessageReceived.class, "ride_id = ?", rideId);
@@ -43,7 +39,7 @@ public class FetchReceivedMessagesService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         rideId = intent.getStringExtra("rideId");
         String since = intent.getStringExtra("since");
-        App.getChatService(getApplicationContext()).requestChatMsgs(rideId, since)
+        CaronaeAPI.service().requestChatMsgs(rideId, since)
                 .enqueue(new Callback<ModelReceivedFromChat>() {
                              @Override
                              public void onResponse(Call<ModelReceivedFromChat> call, Response<ModelReceivedFromChat> response) {

@@ -1,278 +1,191 @@
 package br.ufrj.caronae.frags;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
-import android.widget.ProgressBar;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
-import com.github.clans.fab.FloatingActionMenu;
-import com.google.gson.Gson;
-
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
 
-import br.ufrj.caronae.App;
 import br.ufrj.caronae.R;
-import br.ufrj.caronae.SharedPref;
+import br.ufrj.caronae.data.SharedPref;
 import br.ufrj.caronae.Util;
 import br.ufrj.caronae.acts.MainAct;
 import br.ufrj.caronae.adapters.AllRidesFragmentPagerAdapter;
-import br.ufrj.caronae.comparators.RideOfferComparatorByDateAndTime;
-import br.ufrj.caronae.models.modelsforjson.RideFiltersForJson;
+import br.ufrj.caronae.interfaces.Updatable;
 import br.ufrj.caronae.models.modelsforjson.RideForJson;
-import br.ufrj.caronae.models.modelsforjson.RideForJsonDeserializer;
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
-public class AllRidesFrag extends Fragment {
+public class AllRidesFrag extends Fragment implements Updatable {
 
-    private static boolean PAGE_WAS_GOING  = true;
-
-    @Bind(R.id.sliding_tabs)
-    TabLayout tabLayout;
-    @Bind(R.id.viewpager)
+    @BindView(R.id.viewpager)
     ViewPager viewPager;
-    @Bind(R.id.progressBar2)
-    ProgressBar progressBar2;
+    @BindView(R.id.tab1)
+    RelativeLayout isGoing_bt;
+    @BindView(R.id.tab2)
+    RelativeLayout isLeaving_bt;
+    @BindView(R.id.tab1_tv)
+    TextView isGoing_tv;
+    @BindView(R.id.tab2_tv)
+    TextView isLeaving_tv;
 
-    static FloatingActionMenu fab_menu;
-    @Bind(R.id.fab_add_ride)
-    com.github.clans.fab.FloatingActionButton fab_add_ride;
-    @Bind(R.id.fab_active_rides)
-    com.github.clans.fab.FloatingActionButton fab_active_rides;
+    ArrayList<RideForJson> goingRides = new ArrayList<>();
+    ArrayList<RideForJson> notGoingRides = new ArrayList<>();
 
-
-    static CoordinatorLayout coordinatorLayout;
-
-    Context context;
-
-    ArrayList<RideForJson> goingRides = new ArrayList<>(), notGoingRides = new ArrayList<>();
-
-    boolean isFabPrepared = false;
+    String isGoing;
+    private AllRidesFragmentPagerAdapter pagerAdapter;
 
     public AllRidesFrag() {
+        // Required empty public constructor
+        Log.d("allRides", "Creating new AllRidesFrag");
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d("allRides", "onCreate AllRidesFrag");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d("allRides", "onCreateView AllRidesFrag");
+
         View view = inflater.inflate(R.layout.fragment_all_rides, container, false);
         ButterKnife.bind(this, view);
 
-        context = getContext();
+        Util.setColors();
 
-        coordinatorLayout = (CoordinatorLayout) view.findViewById(R.id.all_rides_coordinator);
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
-        listAllRides(1);
+            }
 
-        fab_menu = (FloatingActionMenu) view.findViewById(R.id.fab_menu);
+            @Override
+            public void onPageSelected(int position) {
+                if(position == 0)
+                {
+                    isGoing = "1";
+                    SharedPref.setIsGoingPref(isGoing);
+                    setButton(isLeaving_bt, isGoing_bt,isLeaving_tv, isGoing_tv);
+                }
+                else
+                {
+                    isGoing = "0";
+                    SharedPref.setIsGoingPref(isGoing);
+                    setButton(isGoing_bt, isLeaving_bt, isGoing_tv, isLeaving_tv);
+                }
+            }
 
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+
+        if(SharedPref.getGoingLabel() != null)
+        {
+            isGoing_tv.setText(SharedPref.getGoingLabel());
+        }
+        if(SharedPref.getLeavingLabel() != null)
+        {
+            isLeaving_tv.setText(SharedPref.getLeavingLabel());
+        }
+
+        View v = getActivity().getCurrentFocus();
+        if (v != null) {
+            InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+        }
+
+        setHasOptionsMenu(true);
+        ((MainAct)getActivity()).showMainItems();
+
+        pagerAdapter = new AllRidesFragmentPagerAdapter(getChildFragmentManager(), getContext(), goingRides, notGoingRides);
+        viewPager.setAdapter(pagerAdapter);
+
+        isGoing = SharedPref.isGoing;
+
+        if(isGoing.equals("1"))
+        {
+            setButton(isLeaving_bt, isGoing_bt, isLeaving_tv, isGoing_tv);
+            viewPager.setCurrentItem(0);
+        }
+        else
+        {
+            setButton(isGoing_bt, isLeaving_bt, isGoing_tv, isLeaving_tv);
+            viewPager.setCurrentItem(1);
+        }
+
+        if(((MainAct)getActivity()).filterText.getText().equals(""))
+        {
+            ((MainAct)getActivity()).hideFilterCard(getContext());
+        }
         return view;
     }
 
-    private void listAllRides(final int pageNum) {
+    //Creates the toolbar menu with options to access the filter/search fragment
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.toolbar_menu, menu);
+        super.onCreateOptionsMenu(menu,inflater);
+    }
 
-        final Snackbar snackbar = makeNoConexionSnack();
-
-        progressBar2.setVisibility(View.VISIBLE);
-
-
-        if (isAdded() && (getActivity() != null)) {
-
-            String going = null;
-            String neighborhoods = null;
-            String zone = null;
-            String hub = null;
-            String filtersJsonString = SharedPref.getFiltersPref();
-            if (!filtersJsonString.equals(SharedPref.MISSING_PREF)){
-                RideFiltersForJson rideFilters = new Gson().fromJson(filtersJsonString, RideFiltersForJson.class);
-                neighborhoods = rideFilters.getLocation();
-                hub = rideFilters.getCenter();
-                zone = rideFilters.getZone();
-            }
-
-            App.getNetworkService(getContext()).listAllRides(pageNum + "", going, neighborhoods, zone, hub)
-                    .enqueue(new Callback<RideForJsonDeserializer>() {
-                        @Override
-                        public void onResponse(Call<RideForJsonDeserializer> call, Response<RideForJsonDeserializer> response) {
-                            dismissSnack(snackbar);
-                            if (response.isSuccessful()) {
-                                progressBar2.setVisibility(View.GONE);
-
-                                RideForJsonDeserializer data = response.body();
-                                List<RideForJson> rideOffers = data.getData();
-
-                                if (rideOffers != null && !rideOffers.isEmpty()) {
-                                    Collections.sort(rideOffers, new RideOfferComparatorByDateAndTime());
-
-                                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.US);
-                                    Date todayDate = new Date();
-                                    String todayString = simpleDateFormat.format(todayDate);
-                                    simpleDateFormat = new SimpleDateFormat("HH:mm", Locale.US);
-                                    String time = simpleDateFormat.format(todayDate);
-
-                                    Iterator<RideForJson> it = rideOffers.iterator();
-                                    while (it.hasNext()) {
-                                        RideForJson rideOffer = it.next();
-                                        if (Util.formatBadDateWithYear(rideOffer.getDate()).equals(todayString) && Util.formatTime(rideOffer.getTime()).compareTo(time) < 0)
-                                            it.remove();
-                                        else {
-                                            rideOffer.setDbId(rideOffer.getId().intValue());
-                                            if (rideOffer.isGoing())
-                                                if (!checkIfRideIsInList(goingRides, rideOffer))
-                                                    goingRides.add(rideOffer);
-                                            else
-                                                if (!checkIfRideIsInList(notGoingRides, rideOffer))
-                                                    notGoingRides.add(rideOffer);
-                                        }
-                                    }
-                                }
-
-                                if (isAdded()) {
-                                    viewPager.setAdapter(new AllRidesFragmentPagerAdapter(getChildFragmentManager(), goingRides, notGoingRides, App.inst().getResources().getStringArray(R.array.tab_tags)));
-                                    tabLayout.setupWithViewPager(viewPager);
-                                    if (PAGE_WAS_GOING)
-                                        viewPager.setCurrentItem(0);
-                                    else
-                                        viewPager.setCurrentItem(1);
-
-                                    tabLayout.setBackground(ContextCompat.getDrawable(App.inst(), R.drawable.transparency_gradient_top_botton));
-
-                                    configureTabIndicators();
-                                }
-
-                                showFAB();
-
-                            } else {
-                                Util.treatResponseFromServer(response);
-                                progressBar2.setVisibility(View.GONE);
-                                Log.e("listAllRides", response.message());
-                            }
-                            showFAB();
-                        }
-
-                        @Override
-                        public void onFailure(Call<RideForJsonDeserializer> call, Throwable t) {
-                            progressBar2.setVisibility(View.GONE);
-                            Log.e("listAllRides", t.getMessage());
-                            showFAB();
-                            snackbar.setAction("CONECTAR", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    listAllRides(pageNum);
-                                }
-                            });
-                            showSnack(snackbar);
-                        }
-                    });
-        } else {
-            Util.toast("Activity not atached");
-            return;
+    @OnClick(R.id.tab1)
+    public void goingTabSelected()
+    {
+        if(isGoing.equals("0"))
+        {
+            isGoing = "1";
+            SharedPref.isGoing = "1";
+            SharedPref.setIsGoingPref(isGoing);
+            viewPager.setCurrentItem(0);
+            setButton(isLeaving_bt, isGoing_bt,isLeaving_tv, isGoing_tv);
         }
     }
 
-    private void configureTabIndicators() {
-
-        View tab = ((ViewGroup) tabLayout.getChildAt(0)).getChildAt(0);
-        ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) tab.getLayoutParams();
-        p.setMargins(25, 0, 25, 0);
-        tab.requestLayout();
-
-        tab = ((ViewGroup) tabLayout.getChildAt(0)).getChildAt(1);
-        p = (ViewGroup.MarginLayoutParams) tab.getLayoutParams();
-        p.setMargins(25, 0, 25, 0);
-        tab.requestLayout();
+    @OnClick(R.id.tab2)
+    public void leavingTabSelected()
+    {
+        if(isGoing.equals("1"))
+        {
+            isGoing = "0";
+            SharedPref.isGoing = "0";
+            SharedPref.setIsGoingPref(isGoing);
+            viewPager.setCurrentItem(1);
+            setButton(isGoing_bt, isLeaving_bt, isGoing_tv, isLeaving_tv);
+        }
     }
 
+    private void setButton(RelativeLayout button1, RelativeLayout button2, TextView bt1_tv, TextView bt2_tv)
+    {
+        button1.setFocusable(true);
+        button1.setClickable(true);
+        button2.setFocusable(false);
+        button2.setClickable(false);
+        GradientDrawable bt1Shape = (GradientDrawable)button1.getBackground();
+        GradientDrawable bt2Shape = (GradientDrawable)button2.getBackground();
+        bt1Shape.setColor(getResources().getColor(R.color.white));
+        bt2Shape.setColor(getResources().getColor(R.color.dark_gray));
+        bt1_tv.setTextColor(getResources().getColor(R.color.dark_gray));
+        bt2_tv.setTextColor(getResources().getColor(R.color.white));
+    }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        isFabPrepared = false;
-    }
-
-    @OnClick(R.id.fab_add_ride)
-    public void fab_add_ride() {
-        ((MainAct) getActivity()).showRideOfferFrag();
-    }
-
-    @OnClick(R.id.fab_active_rides)
-    public void fab_active_rides() {
-        ((MainAct) getActivity()).showActiveRidesFrag();
-    }
-
-
-    private void showFAB() {
-        Animation anim = new AlphaAnimation(0, 1);
-        anim.setDuration(600);
-        anim.setFillEnabled(true);
-        anim.setFillAfter(true);
-        fab_menu.startAnimation(anim);
-    }
-
-    private ArrayList<RideForJson> filterList(ArrayList<RideForJson> listToFilter, CharSequence searchText) {
-        ArrayList<RideForJson> listFiltered = new ArrayList<>();
-        for (int ride = 0; ride < listToFilter.size(); ride++) {
-            if (listToFilter.get(ride).getNeighborhood().toLowerCase().contains(searchText.toString().toLowerCase()))
-                listFiltered.add(listToFilter.get(ride));
-        }
-        return listFiltered;
-    }
-
-    public static Snackbar makeLoadingRidesSnack() {
-        return Snackbar.make(coordinatorLayout, coordinatorLayout.getResources().getString(R.string.load_more_rides), Snackbar.LENGTH_INDEFINITE);
-    }
-
-    public static void showSnack(Snackbar snackbar) {
-        fab_menu.animate().translationY(-Util.convertDpToPixel(32));
-        snackbar.show();
-    }
-
-    public static void dismissSnack(Snackbar snackbar) {
-        fab_menu.animate().translationY(Util.convertDpToPixel(32));
-        snackbar.dismiss();
-    }
-
-    public static Snackbar makeNoConexionSnack() {
-        return Snackbar.make(coordinatorLayout, coordinatorLayout.getResources().getString(R.string.no_conexion), Snackbar.LENGTH_INDEFINITE);
-    }
-
-    private boolean checkIfRideIsInList(ArrayList<RideForJson> list, RideForJson ride) {
-        boolean contains = false;
-        for (int counter = 0; counter < list.size(); counter++) {
-            if (list.get(counter).getDbId() == ride.getDbId()) {
-                contains = true;
-            }
-            if (!contains
-                    && (list.get(counter).getDriver().getDbId() == (ride.getDriver().getDbId()))
-                    && (list.get(counter).getDate().equals(ride.getDate()))
-                    && (list.get(counter).getTime().equals(ride.getTime()))){
-                contains = true;
-            }
-        }
-        return contains;
-    }
-
-    public static void setPageThatWas(boolean page){
-        PAGE_WAS_GOING = page;
+    public void needsUpdating() {
+        pagerAdapter.needsUpdating();
     }
 }
+

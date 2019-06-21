@@ -2,7 +2,6 @@ package br.ufrj.caronae.acts;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,11 +31,12 @@ import java.util.Locale;
 
 import br.ufrj.caronae.App;
 import br.ufrj.caronae.R;
-import br.ufrj.caronae.SharedPref;
+import br.ufrj.caronae.data.SharedPref;
 import br.ufrj.caronae.Util;
 import br.ufrj.caronae.adapters.ChatMsgsAdapter;
 import br.ufrj.caronae.comparators.ChatMsgComparator;
 import br.ufrj.caronae.firebase.FetchReceivedMessagesService;
+import br.ufrj.caronae.httpapis.CaronaeAPI;
 import br.ufrj.caronae.models.ChatAssets;
 import br.ufrj.caronae.models.ChatMessageReceived;
 import br.ufrj.caronae.models.ChatMessageSendResponse;
@@ -45,45 +44,44 @@ import br.ufrj.caronae.models.NewChatMsgIndicator;
 import br.ufrj.caronae.models.Ride;
 import br.ufrj.caronae.models.RideEndedEvent;
 import br.ufrj.caronae.models.modelsforjson.ChatSendMessageForJson;
+import br.ufrj.caronae.models.modelsforjson.MyRidesForJson;
 import br.ufrj.caronae.models.modelsforjson.RideForJson;
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-
 public class ChatAct extends AppCompatActivity {
 
-    @Bind(R.id.chatMsgs_rv)
+    @BindView(R.id.back_bt)
+    RelativeLayout backBtn;
+    @BindView(R.id.chatMsgs_rv)
     RecyclerView chatMsgs_rv;
-    @Bind(R.id.send_bt)
+    @BindView(R.id.send_bt)
     com.github.clans.fab.FloatingActionButton send_bt;
-    @Bind(R.id.msg_et)
+    @BindView(R.id.msg_et)
     EditText msg_et;
-    @Bind(R.id.chat_header_text)
+    @BindView(R.id.chat_header_text)
     TextView headerText;
-    @Bind(R.id.lay1)
-    RelativeLayout lay1;
-    @Bind(R.id.card_loading_menssages_sign)
+    @BindView(R.id.card_loading_menssages_sign)
     CardView cardLoadingMessages;
-    @Bind(R.id.loading_message_text)
+    @BindView(R.id.loading_message_text)
     TextView loadMessageText;
-
-    int textCounter = 0;
-
 
     private String rideId;
     private static List<ChatMessageReceived> chatMsgsList;
     static int color;
     Context context;
     static ChatMsgsAdapter chatMsgsAdapter;
-    Toolbar toolbar;
+    private RideForJson rideOffer;
+    private String fromWhere = "", status;
+    private int idRide;
+
 
     Animation translate;
 
-    private final String BROADCAST_NEW_MESSAGES_NULL = "messagesNull";
     private final String RIDE_ID_BUNDLE_KEY = "rideId";
 
 
@@ -93,10 +91,14 @@ public class ChatAct extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);
 
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
         App.getBus().register(this);
+
+        try {
+            fromWhere = getIntent().getStringExtra("fromWhere");
+            status = getIntent().getStringExtra("status");
+        }catch(Exception e){}
+        rideOffer = getIntent().getExtras().getParcelable("ride");
+        idRide = getIntent().getExtras().getInt("id");
 
         SharedPref.setChatActIsForeground(true);
 
@@ -106,7 +108,6 @@ public class ChatAct extends AppCompatActivity {
         }
 
         rideId = getIntent().getExtras().getString(RIDE_ID_BUNDLE_KEY);
-//        ChatAssets chatAssets;
         List<ChatAssets> l = ChatAssets.find(ChatAssets.class, "ride_id = ?", rideId);
         if (l == null || l.isEmpty()) {
             List<Ride> ride = Ride.find(Ride.class, "db_id = ?", rideId);
@@ -122,19 +123,12 @@ public class ChatAct extends AppCompatActivity {
     private void configureActivityWithChatAssets(ChatAssets chatAssets) {
         context = this;
         color = chatAssets.getColor();
-        int colorPressed = Util.getPressedColorbyNormalColor(color);
-        lay1.setBackgroundColor(color);
-        toolbar.setBackgroundColor(color);
-        int bgRes = chatAssets.getBgRes();
-//        send_bt.setBackgroundResource(bgRes);
+        int colorPressed = color;
         send_bt.setColorNormal(color);
         send_bt.setColorPressed(colorPressed);
         String neighborhood = chatAssets.getLocation();
-//        neighborhood_tv.setText(neighborhood);
         String date = chatAssets.getDate();
-//        date_tv.setText(date);
         String time = chatAssets.getTime();
-//        time_tv.setText(time);
         headerText.setText(neighborhood + " - " + date + " - " + time);
 
         chatMsgsList = ChatMessageReceived.find(ChatMessageReceived.class, "ride_id = ?", rideId);
@@ -155,7 +149,6 @@ public class ChatAct extends AppCompatActivity {
 
         if (!chatMsgsList.isEmpty())
             chatMsgs_rv.scrollToPosition(chatMsgsList.size() - 1);
-
     }
 
     @OnClick(R.id.send_bt)
@@ -167,7 +160,7 @@ public class ChatAct extends AppCompatActivity {
         if (message.isEmpty())
             return;
 
-        String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date());
+        String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         final ChatMessageReceived msg = new ChatMessageReceived(App.getUser().getName(), App.getUser().getDbId() + "", message, rideId, time);
         msg.setId((long) -1);
 
@@ -178,7 +171,7 @@ public class ChatAct extends AppCompatActivity {
 
         chatMsgs_rv.scrollToPosition(chatMsgsList.size() - 1);
 
-        App.getChatService(getApplicationContext()).sendChatMsg(rideId, new ChatSendMessageForJson(message))
+        CaronaeAPI.service().sendChatMsg(rideId, new ChatSendMessageForJson(message))
                 .enqueue(new Callback<ChatMessageSendResponse>() {
                     @Override
                     public void onResponse(Call<ChatMessageSendResponse> call, Response<ChatMessageSendResponse> response) {
@@ -250,6 +243,7 @@ public class ChatAct extends AppCompatActivity {
 
         if (translate.hasEnded()) {
             translate = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.anim_loading_messages_up);
+            cardLoadingMessages.setVisibility(View.VISIBLE);
             cardLoadingMessages.startAnimation(translate);
         } else {
             translate.setAnimationListener(new Animation.AnimationListener() {
@@ -261,6 +255,7 @@ public class ChatAct extends AppCompatActivity {
                 public void onAnimationEnd(Animation animation) {
                     translate = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.anim_loading_messages_up);
                     cardLoadingMessages.startAnimation(translate);
+                    cardLoadingMessages.setVisibility(View.GONE);
                 }
 
                 @Override
@@ -270,18 +265,11 @@ public class ChatAct extends AppCompatActivity {
         }
     }
 
-    public void updateLoadText(ArrayList<String> textToLoad) {
-        loadMessageText.setText(textToLoad.get(textCounter));
-        textCounter++;
-        if (textCounter >= 3) {
-            textCounter = 0;
-        }
-    }
-
     @Subscribe
     public void updateMsgsListWithServer(final String rideId) {
 
         translate = AnimationUtils.loadAnimation(this, R.anim.anim_loading_messages_down);
+        cardLoadingMessages.setVisibility(View.VISIBLE);
         cardLoadingMessages.startAnimation(translate);
 
 
@@ -372,47 +360,20 @@ public class ChatAct extends AppCompatActivity {
         return -1;
     }
 
-    private class ReceiveBroadcastNewMessagesNull extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (translate.hasEnded()) {
-                translate = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.anim_loading_messages_up);
-                cardLoadingMessages.startAnimation(translate);
-            } else {
-                translate.setAnimationListener(new Animation.AnimationListener() {
-                    @Override
-                    public void onAnimationStart(Animation animation) {
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animation animation) {
-                        translate = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.anim_loading_messages_up);
-                        cardLoadingMessages.startAnimation(translate);
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animation animation) {
-                    }
-                });
-            }
-
-        }
-    }
-
     private Ride getRideFromServer(final Activity activity) {
         final RideForJson[] ride = {null};
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 final ProgressDialog pd = ProgressDialog.show(activity, "", activity.getString(R.string.wait), true, true);
-                App.getNetworkService(activity).getMyActiveRides()
-                        .enqueue(new Callback<List<RideForJson>>() {
+                CaronaeAPI.service().getMyRides(Integer.toString(App.getUser().getDbId()))
+                        .enqueue(new Callback<MyRidesForJson>() {
                             @Override
-                            public void onResponse(Call<List<RideForJson>> call, Response<List<RideForJson>> response) {
+                            public void onResponse(Call<MyRidesForJson> call, Response<MyRidesForJson> response) {
 
                                 if (response.isSuccessful()) {
-                                    List<RideForJson> rideWithUsersList = response.body();
+                                    MyRidesForJson data = response.body();
+                                    List<RideForJson> rideWithUsersList = data.getActiveRides();
 
                                     Log.e("RIDE", "rides encontradas: " + rideWithUsersList.size());
 
@@ -429,12 +390,11 @@ public class ChatAct extends AppCompatActivity {
                                     if (ride[0] != null){
                                         String location;
                                         if (ride[0].isGoing())
-                                            location = ride[0].getNeighborhood() + " -> " + ride[0].getHub();
+                                            location = ride[0].getNeighborhood() + " ➜ " + ride[0].getHub();
                                         else
-                                            location = ride[0].getHub() + " -> " + ride[0].getNeighborhood();
+                                            location = ride[0].getHub() + " ➜ " + ride[0].getNeighborhood();
                                         ChatAssets chatAssets = new ChatAssets(rideId, location,
-                                                Util.getColorbyZone(ride[0].getZone()),
-                                                Util.getBgResByZone(ride[0].getZone()),
+                                                Util.getColors(ride[0].getZone()),
                                                 Util.formatBadDateWithoutYear(ride[0].getDate()),
                                                 Util.formatTime(ride[0].getTime()));
                                         chatAssets.save();
@@ -455,7 +415,7 @@ public class ChatAct extends AppCompatActivity {
                             }
 
                             @Override
-                            public void onFailure(Call<List<RideForJson>> call, Throwable t) {
+                            public void onFailure(Call<MyRidesForJson> call, Throwable t) {
                                 pd.dismiss();
                                 Log.e("getMyActiveRides", t.getMessage());
                             }
@@ -463,5 +423,28 @@ public class ChatAct extends AppCompatActivity {
             }
         });
         return ride[0];
+    }
+
+
+    @OnClick(R.id.back_bt)
+    public void backRide()
+    {
+        Intent intent = new Intent(this, RideDetailAct.class);
+        intent.putExtra("ride", rideOffer);
+        intent.putExtra("fromWhere", fromWhere);
+        intent.putExtra("status", status);
+        intent.putExtra("id",  idRide);
+        startActivity(intent);
+        overridePendingTransition(R.anim.anim_left_slide_in, R.anim.anim_right_slide_out);
+    }
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, RideDetailAct.class);
+        intent.putExtra("ride", rideOffer);
+        intent.putExtra("fromWhere", fromWhere);
+        intent.putExtra("status", status);
+        intent.putExtra("id", idRide);
+        startActivity(intent);
+        overridePendingTransition(R.anim.anim_left_slide_in, R.anim.anim_right_slide_out);
     }
 }

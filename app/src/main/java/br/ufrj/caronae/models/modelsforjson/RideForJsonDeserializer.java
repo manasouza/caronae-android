@@ -1,22 +1,29 @@
 package br.ufrj.caronae.models.modelsforjson;
 
-import java.util.List;
+import android.util.Log;
 
-/**
- * Created by Luis-DELL on 4/1/2017.
- */
+import java.util.List;
 
 public class RideForJsonDeserializer {
 
-    public List<RideForJson> getData() {
+    private List<RideForJson> data;
+    private int current_page;
+    private int last_page;
+
+    public List<RideForJson> getRides() {
         return data;
     }
 
-    private List<RideForJson> data;
+    public boolean hasRides() {
+        return !getRides().isEmpty();
+    }
 
-    private List<RideForJson> rides;
+    public boolean hasMorePages() {
+        Log.d("allRides", "hasMorePages - current: " + current_page + ", last: " + last_page);
+        return current_page < last_page;
+    }
 
-    public List<RideForJson> getRides(){
-        return rides;
+    public int getNextPage() {
+        return current_page + 1;
     }
 }

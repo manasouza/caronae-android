@@ -1,0 +1,69 @@
+fastlane_require 'aws-sdk-kms'
+
+default_platform :android
+
+platform :android do
+  desc "Prepare dependencies for building app"
+  lane :prepare_build do |options|
+    decrypt_key(file: '../app/google-services.json')
+    decrypt_key(file: '../keys/google-play-developer-key.json')
+    decrypt_key(file: '../keys/caronaekeystore.jks')
+  end
+
+  desc "Build app"
+  lane :build do
+    version_code = File.read("../build_number.txt").to_i if File.exist?("../build_number.txt")
+    puts "Version code: #{version_code}" if version_code
+    build_properties = ENV['CIRCLECI'] ? {
+      'RELEASE_STORE_FILE' => '../keys/caronaekeystore.jks',
+      'RELEASE_STORE_PASSWORD' => ENV['RELEASE_STORE_PASSWORD'],
+      'RELEASE_KEY_ALIAS' => ENV['RELEASE_KEY_ALIAS'],
+      'RELEASE_KEY_PASSWORD' => ENV['RELEASE_KEY_PASSWORD'],
+    } : {}
+    build_properties[:VERSION_CODE] = version_code if version_code
+    gradle(
+      task: 'assemble',
+      build_type: 'Release',
+      properties: build_properties,
+      print_command: false,
+    )
+  end
+
+  desc "Submit a new Beta Build to Google Play"
+  lane :beta do
+    build
+    upload_to_play_store(
+      track: 'internal',
+    )
+  end
+
+  desc "Deploy a new version to Google Play"
+  lane :deploy do
+    build
+    upload_to_play_store
+  end
+
+  desc "Encrypt sensitive key"
+  lane :encrypt_key do |options|
+    file = options[:file]
+    kms = Aws::KMS::Client.new()
+    decrypted_file = IO.read(file)
+    encrypted_data = kms.encrypt(key_id: 'alias/caronae-ios-keys', plaintext: decrypted_file)
+    encrypted_text = Base64.encode64(encrypted_data.ciphertext_blob)
+    IO.write(file + '.encrypted', encrypted_text)
+
+    UI.success("Successfully encrypted key #{file}")
+  end
+
+  desc "Decrypt sensitive key"
+  lane :decrypt_key do |options|
+    file = options[:file]
+    kms = Aws::KMS::Client.new()
+    encrypted_file = IO.read(file + '.encrypted')
+    encrypted_data = Base64.decode64(encrypted_file)
+    decrypted_data = kms.decrypt(ciphertext_blob: encrypted_data)
+    IO.write(file, decrypted_data.plaintext)
+
+    UI.success("Successfully decrypted key #{file}")
+  end
+end

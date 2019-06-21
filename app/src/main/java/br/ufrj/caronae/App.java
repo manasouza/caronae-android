@@ -2,43 +2,38 @@ package br.ufrj.caronae;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.multidex.MultiDex;
+import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.orm.SugarApp;
 
 import org.acra.ACRA;
 import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import br.ufrj.caronae.ACRAreport.CrashReportFactory;
 import br.ufrj.caronae.acts.LoginAct;
 import br.ufrj.caronae.asyncs.LogOut;
-import br.ufrj.caronae.httpapis.ChatService;
-import br.ufrj.caronae.httpapis.NetworkService;
+import br.ufrj.caronae.data.MainThreadBus;
+import br.ufrj.caronae.data.SharedPref;
+import br.ufrj.caronae.httpapis.LoginService;
+import br.ufrj.caronae.httpapis.ServiceCallback;
 import br.ufrj.caronae.models.User;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
-import static br.ufrj.caronae.Constants.CARONAE_ENDPOINT;
 
 /** Usa o Falae para reportar crashes **/
 @ReportsCrashes(
         reportSenderFactoryClasses = {CrashReportFactory.class},
         mode = ReportingInteractionMode.NOTIFICATION,
-        resNotifText = R.string.crash_notifcation_text,
+        resNotifText = R.string.crash_notifcation_message,
         resNotifTitle = R.string.crash_notifcation_title,
-        resNotifTickerText = R.string.crash_notifcation_ticker_text,
-        resDialogText = R.string.crash_notifcation_text
+        resNotifTickerText = R.string.crash_notifcation_ticker_message,
+        resDialogText = R.string.crash_notifcation_message
 )
 /******/
 
@@ -47,15 +42,50 @@ public class App extends SugarApp {
 
     private static App inst;
     private static User user;
-    private static NetworkService networkService;
-    private static ChatService chatService;
     private static MainThreadBus bus;
 
     public App() {
+        Timer timer = new Timer ();
+        TimerTask hourlyTask = new TimerTask () {
+            @Override
+            public void run () {
+                SharedPref.lastMyRidesUpdate += 1;
+                SharedPref.lastSearchRidesUpdate += 1;
+            }
+        };
+        timer.schedule (hourlyTask, 0, 1000);
         inst = this;
     }
 
-    public static App inst() {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        if (isUserLoggedIn()) {
+            checkIfUserNeedsToMigrateToJWT();
+        }
+    }
+
+    private void checkIfUserNeedsToMigrateToJWT() {
+        if (SharedPref.getUserJWTToken() != null) {
+            Log.i("Login", "User is already using JWT.");
+            return;
+        }
+
+        Log.i("Login", "User needs to migrate to JWT.");
+        LoginService.service().migrateToJWT(new ServiceCallback() {
+            @Override
+            public void success(Object obj) {
+                Log.i("Login", "User successfully migrated to JWT.");
+            }
+
+            @Override
+            public void fail(Throwable t) {
+                Log.e("Login", "Failed to migrate user to JWT.");
+            }
+        });
+    }
+
+    public static App getInst() {
         return inst;
     }
 
@@ -73,118 +103,7 @@ public class App extends SugarApp {
             if (!userJson.equals(SharedPref.MISSING_PREF))
                 user = new Gson().fromJson(userJson, User.class);
         }
-
         return user;
-    }
-
-    public static String getHost() {
-//        return DEV_SERVER_ENDPOINT;
-        return CARONAE_ENDPOINT;
-    }
-
-    public static NetworkService getNetworkService(final Context context) {
-
-        if (networkService == null) {
-            String endpoint = getHost();
-
-            Gson gson = new GsonBuilder()
-                    .setLenient()
-                    .create();
-
-            OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-            httpClient.readTimeout(30, TimeUnit.SECONDS)
-                    .connectTimeout(30, TimeUnit.SECONDS);
-            httpClient.addInterceptor(new Interceptor() {
-                @Override
-                public Response intercept(Chain chain) throws IOException {
-                    Request original = chain.request();
-                    if (App.isUserLoggedIn()) {
-
-                        Request request = original.newBuilder()
-                                .header("Content-Type", "application/json")
-                                .header("token", SharedPref.getUserToken())
-                                .header("User-Agent", Util.getHeaderForHttp(context))
-                                .method(original.method(), original.body())
-                                .build();
-
-                        return chain.proceed(request);
-                    }
-                    Request request = original.newBuilder()
-                            .header("Content-Type", "application/json")
-                            .header("User-Agent", Util.getHeaderForHttp(context))
-                            .method(original.method(), original.body())
-                            .build();
-                    return chain.proceed(request);
-                }
-            });
-
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-            httpClient.addInterceptor(logging);
-
-            OkHttpClient client = httpClient.build();
-
-            networkService = new Retrofit.Builder()
-                    .baseUrl(endpoint)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .client(client)
-                    .build()
-                    .create(NetworkService.class);
-
-        }
-        return networkService;
-    }
-
-    public static ChatService getChatService(final Context context) {
-        if (chatService == null) {
-            String endpoint = getHost();
-
-            Gson gson = new GsonBuilder()
-                    .setLenient()
-                    .create();
-
-            OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-            httpClient.addInterceptor(new Interceptor() {
-                @Override
-                public Response intercept(Chain chain) throws IOException {
-                    Request original = chain.request();
-                    if (App.isUserLoggedIn()) {
-
-                        Request request = original.newBuilder()
-                                .header("Content-Type", "application/json")
-                                .header("token", SharedPref.getUserToken())
-                                .header("User-Agent", Util.getHeaderForHttp(context))
-                                .method(original.method(), original.body())
-                                .build();
-
-                        return chain.proceed(request);
-                    }
-                    Request request = original.newBuilder()
-                            .header("Content-Type", "application/json")
-                            .header("User-Agent", Util.getHeaderForHttp(context))
-                            .method(original.method(), original.body())
-                            .build();
-                    return chain.proceed(request);
-                }
-            });
-
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-            httpClient.addInterceptor(logging);
-
-            OkHttpClient client = httpClient.build();
-
-            chatService = new Retrofit.Builder()
-                    .baseUrl(endpoint)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .client(client)
-                    .build()
-                    .create(ChatService.class);
-
-        }
-        return chatService;
     }
 
     public static MainThreadBus getBus() {
@@ -199,14 +118,19 @@ public class App extends SugarApp {
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
         ACRA.init(this);
+        MultiDex.install(base);
     }
 
     public static void LogOut(){
-        FirebaseMessaging.getInstance().unsubscribeFromTopic(SharedPref.TOPIC_GERAL);
-        FirebaseMessaging.getInstance().unsubscribeFromTopic(App.getUser().getDbId() + "");
-        new LogOut(App.inst()).execute();
-        Intent intent = new Intent(App.inst(), LoginAct.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        App.inst().startActivity(intent);
+        try {
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(SharedPref.TOPIC_GERAL);
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(App.getUser().getDbId() + "");
+            new LogOut(App.getInst()).execute();
+            Intent intent = new Intent(App.getInst(), LoginAct.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            App.getInst().startActivity(intent);
+        }catch (Exception e){
+            Log.e("LogOut ERROR: ", e + "");
+        }
     }
 }

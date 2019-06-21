@@ -10,6 +10,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:adjustViewBounds="true"
-        android:src="@drawable/opening" />
+        android:padding="100dp"
+        android:src="@drawable/logo" />
 
 </FrameLayout>

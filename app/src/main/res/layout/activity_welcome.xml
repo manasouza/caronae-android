@@ -1,0 +1,62 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_gray"
+    tools:context="br.ufrj.caronae.acts.WelcomeAct">
+
+    <TextView
+        android:id="@+id/welcome_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="80dp"
+        android:text="Olá, Paula!"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:layout_centerHorizontal="true"
+        android:textColor="@color/dark_gray"/>
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="20dp"
+        android:tint="@color/welcome_text_green"
+        android:layout_below="@id/welcome_title"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/ic_welcome"/>
+    <TextView
+        android:id="@+id/welcome_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginLeft="60dp"
+        android:layout_marginEnd="60dp"
+        android:layout_marginStart="60dp"
+        android:layout_marginRight="60dp"
+        android:text="@string/first_login_msg"
+        android:layout_below="@id/logo"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        android:textColor="@color/dark_gray"/>
+
+    <RelativeLayout
+        android:layout_width="180dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/welcome_txt">
+        <TextView
+            android:id="@+id/continue_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_centerInParent="true"
+            android:textSize="20sp"
+            android:textColor="@color/darkblue"
+            android:text="@string/continue_word"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>

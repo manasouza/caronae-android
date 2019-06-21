@@ -1,261 +1,520 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="br.ufrj.caronae.frags.RideOfferFrag"
     android:id="@+id/scrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent">
-
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="wrap_content"
+    android:scrollbars="none"
+    android:background="@android:color/white">
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:focusableInTouchMode="true"
-        android:background="@color/list_white_transparency"
-        tools:context="br.ufrj.caronae.frags.RideOfferFrag">
+        android:background="@color/white_transparency">
 
-        <EditText
-            android:id="@+id/neighborhood_et"
+        <LinearLayout
+            android:id="@+id/tabs"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@drawable/ic_location_on_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_location_on_black_24dp"
-            android:focusable="false"
-            android:hint="@string/frag_rideoffer_neighborHint" />
-
-        <EditText
-            android:id="@+id/place_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/neighborhood_et"
-            android:drawableLeft="@drawable/ic_location_on_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_location_on_black_24dp"
-            android:hint="@string/frag_rideoffer_placeHint"
-            android:inputType="text"
-            android:singleLine="true" />
-
-        <EditText
-            android:id="@+id/way_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/place_et"
-            android:drawableLeft="@drawable/ic_location_on_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_location_on_black_24dp"
-            android:hint="@string/frag_rideoffer_wayhint"
-            android:inputType="text"
-            android:singleLine="true" />
-
-        <EditText
-            android:id="@+id/campi_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/way_et"
-            android:drawableLeft="@drawable/ic_account_balance_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_account_balance_black_24dp"
-            android:focusable="false"
-            android:visibility="gone"
-            android:hint="@string/frag_ridesearch_campiHint"></EditText>
-
-        <EditText
-            android:id="@+id/center_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/campi_et"
-            android:drawableLeft="@drawable/ic_business_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_business_black_24dp"
-            android:focusable="false"
-            android:hint="@string/frag_rideoffer_centerHint" />
-
-        <EditText
-            android:id="@+id/date_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/center_et"
-            android:drawableLeft="@drawable/ic_today_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_today_black_24dp"
-            android:focusable="false"
-            android:hint="@string/frag_rideoffer_dateHint"
-            android:inputType="date" />
-
-        <EditText
-            android:id="@+id/time_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/date_et"
-            android:drawableLeft="@drawable/ic_access_time_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_access_time_black_24dp"
-            android:focusable="false"
-            android:hint="@string/frag_rideoffer_timeHint" />
-
-        <TextView
-            android:id="@+id/slots_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/time_et"
+            android:layout_height="30dp"
+            android:weightSum="2"
             android:layout_marginTop="10dp"
-            android:text="@string/frag_rideoffer_slots"
-            android:textStyle="bold" />
-
-        <com.rey.material.widget.Spinner
-            android:id="@+id/slots_et"
-            style="@style/Material.Widget.Spinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/slots_tv"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            app:rd_style="@style/Material.Drawable.Ripple.Wave" />
-
-        <EditText
-            android:id="@+id/description_et"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/slots_tv"
-            android:layout_marginTop="10dp"
-            android:gravity="top"
-            android:hint="@string/frag_rideoffer_description"
-            android:lines="2" />
-
-        <CheckBox
-            android:id="@+id/routine_cb"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/description_et"
-            android:layout_marginTop="15dp"
-            android:checked="false"
-            android:text="@string/routine_cb" />
-
-        <RelativeLayout
-            android:id="@+id/days_lo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/routine_cb"
+            android:layout_marginLeft="25dp"
+            android:layout_marginStart="25dp"
+            android:layout_marginRight="25dp"
+            android:layout_marginEnd="25dp"
             android:layout_centerHorizontal="true"
-            android:orientation="horizontal"
-            android:visibility="gone">
+            android:orientation="horizontal">
 
             <RelativeLayout
-                android:id="@+id/days"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="5dp">
+                android:id="@+id/tab1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="@drawable/tab_left"
+                android:layout_marginRight="-2dp"
+                android:layout_marginEnd="-2dp">
 
-                <CheckBox
-                    android:id="@+id/sunday_cb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="D" />
-
-                <CheckBox
-                    android:id="@+id/monday_cb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/sunday_cb"
-                    android:layout_toRightOf="@+id/sunday_cb"
-                    android:text="S" />
-
-                <CheckBox
-                    android:id="@+id/tuesday_cb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/monday_cb"
-                    android:layout_toRightOf="@+id/monday_cb"
-                    android:text="T" />
-
-                <CheckBox
-                    android:id="@+id/wednesday_cb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/tuesday_cb"
-                    android:layout_toRightOf="@+id/tuesday_cb"
-                    android:text="Q" />
-
-                <CheckBox
-                    android:id="@+id/thursday_cb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/wednesday_cb"
-                    android:layout_toRightOf="@+id/wednesday_cb"
-                    android:text="Q" />
-
-                <CheckBox
-                    android:id="@+id/friday_cb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/thursday_cb"
-                    android:layout_toRightOf="@+id/thursday_cb"
-                    android:text="S" />
-
-                <CheckBox
-                    android:id="@+id/saturday_cb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toEndOf="@+id/friday_cb"
-                    android:layout_toRightOf="@+id/friday_cb"
-                    android:text="S" />
+                <TextView
+                    android:id="@+id/tab1_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="12sp"
+                    android:maxLines="1"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:text="@string/arriving_ufrj"/>
             </RelativeLayout>
+            <RelativeLayout
+                android:id="@+id/tab2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginLeft="-2dp"
+                android:layout_marginStart="-2dp"
+                android:background="@drawable/tab_right">
+                <TextView
+                    android:id="@+id/tab2_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="12sp"
+                    android:maxLines="1"
+                    android:gravity="center"
+                    android:text="@string/leaving_ufrj"
+                    android:textColor="@color/dark_gray"/>
+
+            </RelativeLayout>
+        </LinearLayout>
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_below="@id/tabs">
+            <EditText
+                android:id="@+id/neighborhood_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/ic_location_on_24dp"
+                android:drawablePadding="5dp"
+                android:drawableStart="@drawable/ic_location_on_24dp"
+                android:ellipsize="end"
+                android:focusable="false"
+                android:textColor="@color/black"
+                android:text="@string/neighborhood"
+                android:maxLines="1" />
+
+            <EditText
+                android:id="@+id/place_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/neighborhood_et"
+                android:clickable="true"
+                android:cursorVisible="true"
+                android:ellipsize="end"
+                android:focusable="true"
+                android:textColor="@color/black"
+                android:focusableInTouchMode="true"
+                android:hint="@string/fragment_rideoffer_place_hint"
+                android:inputType="textCapSentences"
+                android:maxLines="1"
+                android:singleLine="true" />
+
+            <EditText
+                android:id="@+id/way_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/place_et"
+                android:clickable="true"
+                android:cursorVisible="true"
+                android:ellipsize="end"
+                android:focusable="true"
+                android:textColor="@color/black"
+                android:focusableInTouchMode="true"
+                android:hint="@string/fragment_rideoffer_way_hint"
+                android:inputType="textCapSentences"
+                android:maxLines="1"
+                android:singleLine="true" />
+
+            <EditText
+                android:id="@+id/center_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/way_et"
+                android:drawableLeft="@drawable/ic_location_on_24dp"
+                android:drawablePadding="5dp"
+                android:drawableStart="@drawable/ic_location_on_24dp"
+                android:ellipsize="end"
+                android:hint="@string/fragment_ridesearch_campi_hint"
+                android:focusable="false"
+                android:text="@string/fragment_ridesearch_campi_hint"
+                android:textColor="@color/black"
+                android:maxLines="1" />
 
             <TextView
-                android:id="@+id/routine_text_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/radioGroup2"
-                android:layout_alignTop="@+id/radioGroup2"
-                android:gravity="center"
-                android:text="Período"
-                android:textStyle="bold" />
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/center_et"
+                android:layout_marginTop="10dp"
+                android:textSize="17sp"
+                android:text="@string/generate_routine"
+                android:textColor="@color/dark_gray"
+                android:textStyle="bold"/>
 
-            <RadioGroup
-                android:id="@+id/radioGroup2"
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/routine_cb"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/days"
-                android:layout_marginLeft="10dp"
-                android:layout_marginStart="10dp"
-                android:layout_toEndOf="@+id/routine_text_tv"
-                android:layout_toRightOf="@+id/routine_text_tv"
-                android:orientation="horizontal">
+                android:layout_below="@+id/center_et"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="10dp"
+                android:checked="true"
+                android:theme="@style/WidgetSC"/>
 
-                <RadioButton
-                    android:id="@+id/r2months_rb"
+            <RelativeLayout
+                android:id="@+id/days_lo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/routine_cb"
+                android:layout_centerHorizontal="true"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:visibility="visible">
+
+                <TextView
+                    android:id="@+id/days_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="true"
-                    android:text="2 meses" />
+                    android:textColor="@color/dark_gray"
+                    android:textStyle="bold"
+                    android:text="@string/days_of_the_week"/>
 
-                <RadioButton
-                    android:id="@+id/r3months_rb"
+                <RelativeLayout
+                    android:id="@+id/days"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="3 meses" />
+                    android:layout_marginTop="10dp"
+                    android:layout_below="@id/days_title"
+                    android:layout_centerHorizontal="true">
 
-                <RadioButton
-                    android:id="@+id/r4months_rb"
+                    <RelativeLayout
+                        android:id="@+id/monday_cb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/rounded_layout">
+                        <TextView
+                            android:id="@+id/mon_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:text="Seg"
+                            android:textColor="@color/dark_gray" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/tuesday_cb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/rounded_layout"
+                        android:layout_toEndOf="@+id/monday_cb"
+                        android:layout_toRightOf="@+id/monday_cb"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp">
+                        <TextView
+                            android:id="@+id/tue_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:text="Ter"
+                            android:textColor="@color/dark_gray" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/wednesday_cb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:background="@drawable/rounded_layout"
+                        android:layout_toEndOf="@+id/tuesday_cb"
+                        android:layout_toRightOf="@+id/tuesday_cb"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp">
+                        <TextView
+                            android:id="@+id/wed_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:text="Qua"
+                            android:textColor="@color/dark_gray" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/thursday_cb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:background="@drawable/rounded_layout"
+                        android:layout_toEndOf="@+id/wednesday_cb"
+                        android:layout_toRightOf="@+id/wednesday_cb"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp">
+                        <TextView
+                            android:id="@+id/thu_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:text="Qui"
+                            android:textColor="@color/dark_gray" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/friday_cb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:background="@drawable/rounded_layout"
+                        android:layout_toEndOf="@+id/thursday_cb"
+                        android:layout_toRightOf="@+id/thursday_cb"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp">
+                        <TextView
+                            android:id="@+id/fri_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:text="Sex"
+                            android:textColor="@color/dark_gray" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/saturday_cb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:background="@drawable/rounded_layout"
+                        android:layout_toEndOf="@+id/friday_cb"
+                        android:layout_toRightOf="@+id/friday_cb"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp">
+                        <TextView
+                            android:id="@+id/sat_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:text="Sab"
+                            android:textColor="@color/dark_gray" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/sunday_cb"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:background="@drawable/rounded_layout"
+                        android:layout_toEndOf="@+id/saturday_cb"
+                        android:layout_toRightOf="@+id/saturday_cb"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp">
+                        <TextView
+                            android:id="@+id/sun_tv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:text="Dom"
+                            android:textColor="@color/dark_gray" />
+                    </RelativeLayout>
+                </RelativeLayout>
+
+                <TextView
+                    android:id="@+id/routine_text_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="4 meses" />
-            </RadioGroup>
+                    android:gravity="center"
+                    android:text="Período"
+                    android:layout_marginTop="10dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_below="@id/days"
+                    android:textColor="@color/dark_gray"
+                    android:textStyle="bold" />
 
+                <RadioGroup
+                    android:id="@+id/radioGroup2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/routine_text_tv"
+                    android:layout_marginTop="10dp"
+                    android:layout_centerHorizontal="true"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/r2months_rb"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:layout_weight="1"
+                        android:singleLine="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp"
+                        android:textColor="@color/dark_gray"
+                        android:text="2 meses" />
+
+                    <RadioButton
+                        android:id="@+id/r3months_rb"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:singleLine="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp"
+                        android:textColor="@color/dark_gray"
+                        android:text="3 meses" />
+
+                    <RadioButton
+                        android:id="@+id/r4months_rb"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:singleLine="true"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginLeft="10dp"
+                        android:textColor="@color/dark_gray"
+                        android:text="4 meses" />
+                </RadioGroup>
+
+            </RelativeLayout>
+
+            <EditText
+                android:id="@+id/time_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/days_lo"
+                android:layout_marginTop="10dp"
+                android:drawableLeft="@drawable/ics_date_and_time"
+                android:drawableStart="@drawable/ics_date_and_time"
+                android:drawablePadding="5dp"
+                android:ellipsize="end"
+                android:focusable="false"
+                android:text="21/04/2018 14:00"
+                android:gravity="end"
+                android:textAlignment="textEnd"
+                android:textColor="@color/gray"
+                android:maxLines="1" />
+
+            <RelativeLayout
+                android:id="@+id/slots_manager"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/time_et"
+                android:layout_marginTop="10dp">
+                <TextView
+                    android:id="@+id/slots_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:textSize="19sp"
+                    android:text="@string/fragment_rideoffer_slots"
+                    android:textColor="@color/dark_gray" />
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="35dp"
+                    android:layout_toEndOf="@id/slots_tv"
+                    android:layout_toRightOf="@id/slots_tv"
+                    android:layout_alignTop="@id/slots_tv">
+                    <TextView
+                        android:id="@+id/slots_n"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/dark_gray"
+                        android:layout_centerVertical="true"
+                        android:layout_toLeftOf="@id/slots"
+                        android:layout_toStartOf="@id/slots"
+                        android:layout_marginRight="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:text="1"/>
+                    <LinearLayout
+                        android:id="@+id/slots"
+                        android:layout_width="120dp"
+                        android:layout_height="35dp"
+                        android:weightSum="2"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:orientation="horizontal">
+
+                        <RelativeLayout
+                            android:id="@+id/remove_slot"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:enabled="false"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="@drawable/btn_left"
+                            android:layout_marginRight="-2dp"
+                            android:layout_marginEnd="-2dp">
+                            <TextView
+                                android:id="@+id/remove_tv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="25sp"
+                                android:textColor="@color/gray"
+                                android:text="-"
+                                android:layout_centerInParent="true"/>
+                        </RelativeLayout>
+                        <RelativeLayout
+                            android:id="@+id/add_slot"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:layout_marginLeft="-2dp"
+                            android:layout_marginStart="-2dp"
+                            android:background="@drawable/btn_right">
+                            <TextView
+                                android:id="@+id/add_tv"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="25sp"
+                                android:textColor="@color/black"
+                                android:text="+"
+                                android:layout_centerInParent="true"/>
+                        </RelativeLayout>
+                    </LinearLayout>
+                </RelativeLayout>
+
+            </RelativeLayout>
+
+            <EditText
+                android:id="@+id/description_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/slots_manager"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/edittext_bg"
+                android:clickable="true"
+                android:cursorVisible="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:gravity="top"
+                android:textColor="@color/black"
+                android:hint="@string/fragment_rideoffer_description"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="10"
+                android:padding="5dp" />
+
+            <Button
+                android:id="@+id/send_bt"
+                android:layout_width="96dp"
+                android:layout_height="38dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_below="@id/description_et"
+                android:layout_marginTop="30dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/btn_color"
+                android:text="@string/create_uppercase"
+                android:textColor="@color/dark_gray" />
         </RelativeLayout>
-
-        <com.rey.material.widget.Button
-            android:id="@+id/send_bt"
-            style="@style/LightRaiseColorButtonRippleStyle"
-            android:layout_width="96dp"
-            android:layout_height="48dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_below="@+id/description_et"
-            android:background="@drawable/btn_color"
-            android:text="@string/create_bt"
-            app:rd_enable="true" />
-
     </RelativeLayout>
 </ScrollView>

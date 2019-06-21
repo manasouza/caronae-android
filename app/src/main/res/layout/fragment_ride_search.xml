@@ -1,135 +1,140 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
     tools:context="br.ufrj.caronae.frags.RideSearchFrag">
-
     <RelativeLayout
-        android:id="@+id/lay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <RadioGroup
-            android:id="@+id/radioGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <LinearLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:weightSum="2"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="25dp"
+            android:layout_marginStart="25dp"
+            android:layout_marginRight="25dp"
+            android:layout_marginEnd="25dp"
             android:layout_centerHorizontal="true"
-            android:focusableInTouchMode="true"
             android:orientation="horizontal">
 
-            <RadioButton
-                android:id="@+id/go_rb"
-                android:layout_width="wrap_content"
+            <RelativeLayout
+                android:id="@+id/tab1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="@drawable/tab_left"
+                android:layout_marginRight="-2dp"
+                android:layout_marginEnd="-2dp">
+
+                <TextView
+                    android:id="@+id/tab1_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="12sp"
+                    android:maxLines="1"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:text="@string/arriving_ufrj"/>
+            </RelativeLayout>
+            <RelativeLayout
+                android:id="@+id/tab2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginLeft="-2dp"
+                android:layout_marginStart="-2dp"
+                android:background="@drawable/tab_right">
+                <TextView
+                    android:id="@+id/tab2_tv"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="12sp"
+                    android:maxLines="1"
+                    android:gravity="center"
+                    android:text="@string/leaving_ufrj"
+                    android:textColor="@color/dark_gray"/>
+
+            </RelativeLayout>
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/lay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tabs"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp">
+
+            <EditText
+                android:id="@+id/center_et"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/go_rb" />
-
-            <RadioButton
-                android:id="@+id/back_rb"
-                android:layout_width="wrap_content"
+                android:drawableLeft="@drawable/ic_location_on_24dp"
+                android:drawableStart="@drawable/ic_location_on_24dp"
+                android:drawablePadding="5dp"
+                android:focusable="false"
+                android:lines="1"
+                android:scrollHorizontally="true"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:editable="false"
+                android:text="@string/fragment_ridefilter_center_hint" />
+            <EditText
+                android:id="@+id/location_et"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/back_rb" />
-        </RadioGroup>
+                android:layout_below="@id/center_et"
+                android:drawableLeft="@drawable/ic_location_on_24dp"
+                android:drawablePadding="5dp"
+                android:lines="1"
+                android:scrollHorizontally="true"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:editable="false"
+                android:drawableStart="@drawable/ic_location_on_24dp"
+                android:focusable="false"
+                android:text="@string/fragment_ridefilter_location_hint" />
 
-        <EditText
-            android:id="@+id/location_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/radioGroup"
-            android:layout_marginLeft="5dp"
-            android:layout_marginStart="5dp"
-            android:drawableLeft="@drawable/ic_location_on_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_location_on_black_24dp"
-            android:focusable="false"
-            android:hint="@string/frag_ridesearch_locationHint" />
+            <EditText
+                android:id="@+id/time_et"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/location_et"
+                android:drawableStart="@drawable/ics_date_and_time"
+                android:drawableLeft="@drawable/ics_date_and_time"
+                android:drawablePadding="5dp"
+                android:focusable="false"
+                android:singleLine="true"
+                android:textSize="16sp"
+                android:gravity="end"
+                android:text="segunda-feira, 01/05/2018 07:00"
+                android:textAlignment="viewEnd"
+                android:textColor="@color/dark_gray" />
 
-        <EditText
-            android:id="@+id/date_et"
-            android:inputType="date"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/location_et"
-            android:layout_marginLeft="5dp"
-            android:layout_marginStart="5dp"
-            android:drawableLeft="@drawable/ic_today_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_today_black_24dp"
-            android:focusable="false"
-            android:hint="@string/frag_ridesearch_dateHint" />
+            <Button
+                android:id="@+id/search_bt"
+                android:layout_width="96dp"
+                android:layout_height="38dp"
+                android:layout_marginTop="20dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_below="@id/time_et"
+                android:background="@drawable/btn_color"
+                android:text="@string/search_uppercase"
+                android:textColor="@color/dark_gray" />
 
-        <EditText
-            android:id="@+id/time_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/date_et"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="5dp"
-            android:layout_marginStart="5dp"
-            android:drawableLeft="@drawable/ic_access_time_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_access_time_black_24dp"
-            android:focusable="false"
-            android:hint="@string/frag_ridesearch_timeHint" />
-
-        <EditText
-            android:id="@+id/center_et"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/time_et"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="5dp"
-            android:layout_marginStart="5dp"
-            android:drawableLeft="@drawable/ic_business_black_24dp"
-            android:drawablePadding="5dp"
-            android:drawableStart="@drawable/ic_business_black_24dp"
-            android:focusable="false"
-            android:hint="@string/frag_ridesearch_centerHint" />
-
-        <com.rey.material.widget.Button
-            android:id="@+id/search_bt"
-            style="@style/LightRaiseColorButtonRippleStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/center_et"
-            android:layout_centerHorizontal="true"
-            android:background="@drawable/btn_color"
-            android:text="@string/frag_ridesearch_searchBt"
-            app:rd_enable="true" />
-
+        </RelativeLayout>
     </RelativeLayout>
-
-    <com.rey.material.widget.Button
-        android:id="@+id/anotherSearch_bt"
-        style="@style/Material.Drawable.Ripple.Wave.Light"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/lay"
-        android:layout_centerHorizontal="true"
-        android:background="@null"
-        android:text="@string/frag_ridesearch_anotherSearchBt"
-        android:visibility="gone"
-        app:rd_enable="true" />
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rvRides"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/anotherSearch_bt"
-        android:layout_margin="8dp" />
-
-    <!--<android.support.design.widget.FloatingActionButton-->
-        <!--android:id="@+id/fab"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_alignParentBottom="true"-->
-        <!--android:layout_alignParentEnd="true"-->
-        <!--android:layout_alignParentRight="true"-->
-        <!--android:layout_margin="16dp"-->
-        <!--android:src="@drawable/ic_add_white_24dp"-->
-        <!--app:backgroundTint="@color/fab_red" />-->
-
-</RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

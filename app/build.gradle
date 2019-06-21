@@ -1,22 +1,34 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.0'
-    dexOptions {
-        jumboMode true
+    ext.buildVersionCode = {
+        if (!project.hasProperty("VERSION_CODE")) {
+            return ""
+        }
+        return Integer.parseInt(VERSION_CODE)
     }
-
+    if (project.hasProperty("RELEASE_STORE_FILE")) {
+        signingConfigs {
+            release {
+                keyAlias RELEASE_KEY_ALIAS
+                keyPassword RELEASE_KEY_PASSWORD
+                storeFile file(RELEASE_STORE_FILE)
+                storePassword RELEASE_STORE_PASSWORD
+            }
+        }
+    }
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "br.ufrj.caronae"
         minSdkVersion 15
-        //noinspection OldTargetApi
-        targetSdkVersion 22
-        versionCode 31
-        versionName "2.2.1"
+        targetSdkVersion 28
+        versionCode buildVersionCode() ?: 37
+        versionName "3.0.7"
         renderscriptTargetApi 15
         renderscriptSupportModeEnabled true
         multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
         release {
@@ -34,37 +46,56 @@ android {
             proguardFile 'proguard-support-v7-appcompat.pro'
             proguardFile 'proguard-support-v7-cardview.pro'
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            if (project.hasProperty("RELEASE_STORE_FILE")) {
+                signingConfig signingConfigs.release
+            }
         }
+    }
+    dexOptions {
+        javaMaxHeapSize "4g"
+        jumboMode true
+    }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
     }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.jakewharton:butterknife:7.0.1'
-    compile 'com.google.android.gms:play-services-gcm:10.2.0'
-    compile 'com.google.code.gson:gson:2.6.1'
-    compile 'com.squareup:otto:1.3.8'
-    compile 'com.squareup.retrofit2:retrofit:2.1.0'
-    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
-    compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
-    compile 'com.squareup.okhttp3:okhttp:3.3.1'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.3.1'
-    compile 'io.reactivex:rxandroid:1.0.1'
-    compile 'com.github.rey5137:material:1.2.2'
-    compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.github.satyan:sugar:1.4'
-    compile 'com.android.support:design:25.0.0'
-    compile 'de.hdodenhof:circleimageview:2.1.0'
-    compile 'com.android.support:appcompat-v7:25.0.0'
-    compile 'com.android.support:cardview-v7:25.0.0'
-    compile 'com.android.support:recyclerview-v7:25.0.0'
-    compile 'com.android.support:support-v4:25.0.0'
-    compile 'com.facebook.android:facebook-android-sdk:4.8.2'
-    compile 'com.google.firebase:firebase-messaging:10.2.0'
-    compile 'com.google.firebase:firebase-core:10.2.0'
-    compile 'com.github.clans:fab:1.6.4'
-    compile 'ch.acra:acra:4.9.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile "com.daimajia.swipelayout:library:1.2.0@aar"
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.jakewharton:butterknife:8.8.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    implementation 'com.google.android.gms:play-services-gcm:16.0.0'
+    implementation 'com.google.firebase:firebase-messaging:17.3.4'
+    implementation 'com.google.firebase:firebase-core:16.0.6'
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.squareup:otto:1.3.8'
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava:2.3.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
+    implementation 'com.android.support:support-vector-drawable:28.0.0'
+    implementation 'com.squareup.picasso:picasso:2.5.2'
+    implementation 'com.android.support:animated-vector-drawable:28.0.0'
+    implementation 'com.android.support:customtabs:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:cardview-v7:28.0.0'
+    implementation 'com.android.support:recyclerview-v7:28.0.0'
+    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.android.support:support-v13:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'com.github.satyan:sugar:1.4'
+    implementation 'com.github.clans:fab:1.6.4'
+    implementation 'com.facebook.android:facebook-android-sdk:4.31.0'
+    implementation 'com.facebook.rebound:rebound:0.3.8'
+    implementation 'com.daimajia.swipelayout:library:1.2.0@aar'
+    implementation 'io.reactivex:rxandroid:1.0.1'
+    implementation 'de.hdodenhof:circleimageview:2.1.0'
+    implementation 'ch.acra:acra:4.9.2'
+    implementation 'com.redmadrobot:inputmask:2.3.0'
 }
 apply plugin: 'com.google.gms.google-services'
